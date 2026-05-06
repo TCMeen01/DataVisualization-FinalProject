@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic-settings
+python-dotenv
+pandas
+matplotlib
+seaborn
+google-generativeai
+aiosqlite

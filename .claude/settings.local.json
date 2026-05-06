@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npm install -g pnpm 2>&1)",
+      "PowerShell(pnpm --version)"
+    ]
+  }
+}
