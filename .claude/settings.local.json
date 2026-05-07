@@ -30,7 +30,19 @@
       "Bash(curl -s -w \"\\\\nHTTP: %{http_code}\\\\n\" \"http://127.0.0.1:8001/api/logs/abc-123\")",
       "Read(//c/NhutAnh/**)",
       "Bash(netstat -ano)",
-      "Bash(taskkill /F /PID 4676)"
+      "Bash(taskkill /F /PID 4676)",
+      "Bash(openspec instructions *)",
+      "PowerShell(python -c \"import pandas as pd; v=pd.read_csv\\('c:/NhutAnh/DataVisualization-FinalProject/backend/data/videos_processed.csv', nrows=3\\); print\\('VIDEOS COLS:', len\\(v.columns\\)\\); print\\(list\\(v.columns\\)\\); print\\(\\); print\\(v.dtypes\\); print\\('---'\\); c=pd.read_csv\\('c:/NhutAnh/DataVisualization-FinalProject/backend/data/channels_processed.csv', nrows=3\\); print\\('CHANNELS COLS:', len\\(c.columns\\)\\); print\\(list\\(c.columns\\)\\); print\\(\\); print\\(c.dtypes\\)\")",
+      "Bash(python -m py_compile app/main.py app/config.py app/api/ai.py app/api/data.py app/api/execute.py app/api/logs.py app/db/__init__.py app/models/__init__.py app/models/request.py app/models/response.py app/services/__init__.py app/services/data_store.py app/services/executor.py app/services/logger.py app/services/llm/__init__.py app/services/llm/base.py app/services/llm/gemini.py app/services/llm/prompts.py)",
+      "Bash(python -m py_compile app/main.py app/config.py app/api/ai.py app/api/data.py app/api/execute.py app/api/logs.py app/api/__init__.py app/models/__init__.py app/models/request.py app/models/response.py app/services/__init__.py app/services/data_store.py app/services/executor.py app/services/logger.py app/services/llm/__init__.py app/services/llm/base.py app/services/llm/gemini.py app/services/llm/prompts.py)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(python -c \"from app.main import app; print\\('import OK'\\)\")",
+      "Bash(python -m uvicorn app.main:app --host 127.0.0.1 --port 8765 --log-level warning)",
+      "Bash(curl -s http://127.0.0.1:8765/health)",
+      "Bash(curl -s \"http://127.0.0.1:8765/api/data/schema\")",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('videos cols:', len\\(d['videos']['columns']\\), 'rows:', d['videos']['row_count']\\); print\\('channels cols:', len\\(d['channels']['columns']\\), 'rows:', d['channels']['row_count']\\)\")",
+      "Bash(curl -s \"http://127.0.0.1:8765/api/data/overview\")",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d['kpis']\\)\")"
     ]
   }
 }

@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import ai, data, execute, logs
 from app.config import settings
+from app.services import data_store
 from app.services.logger import init_db
 
 
@@ -12,6 +13,7 @@ from app.services.logger import init_db
 async def lifespan(app: FastAPI):
     settings.SANDBOX_DIR.mkdir(parents=True, exist_ok=True)
     await init_db()
+    data_store.load()
     yield
 
 

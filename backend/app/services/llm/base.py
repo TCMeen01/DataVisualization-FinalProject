@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-
-from app.models.request import DataContext
+from typing import Any
 
 
 class LLMClient(ABC):
@@ -8,8 +7,8 @@ class LLMClient(ABC):
     async def generate(
         self,
         prompt: str,
-        data_context: DataContext | None,
-        history: list[dict],
+        data_context: dict[str, Any] | None,
+        history: list[dict] | None = None,
     ) -> dict:
         """Trả về dict {"code": str, "explanation": str}."""
         ...

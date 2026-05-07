@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS requests (
   ai_code TEXT,
   ai_explanation TEXT,
   edited_code TEXT,
-  status TEXT CHECK(status IN ('pending','edited','approved','executed','completed','failed','rejected')),
+  was_edited BOOLEAN DEFAULT 0,
+  status TEXT CHECK(status IN ('pending','edited','approved','executing','executed','completed','failed','rejected')),
   execution_result_json TEXT,
   error_message TEXT,
   execution_time_ms INTEGER
