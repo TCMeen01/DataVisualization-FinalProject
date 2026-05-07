@@ -386,6 +386,130 @@ pnpm dev
 - Mỗi page dashboard có InsightCard 1-1 với 1 RO.
 - Không lỗi nghiêm trọng frontend console; `pnpm build` pass.
 
+### 5 RO Test Cases (REQUIREMENTS.md §8)
+
+Source of truth: [REQUIREMENTS.md §8](REQUIREMENTS.md#8-câu-hỏi-vấn-đáp-chuẩn-bị-sẵn--map-1-1-với-5-ro). Các test case này map 1-1 với 5 Research Objectives và được sử dụng để verify AI module trong buổi vấn đáp.
+
+#### RO1: Xu hướng Short-form
+**Prompt (verbatim từ REQUIREMENTS.md §8):**
+```
+Vẽ heatmap tỉ lệ short-form theo kênh × năm. Liệt kê 5 kênh xoay trục mạnh nhất từ 2020 sang 2024.
+```
+
+**Expected code pattern:**
+- `videos.groupby(['channel_name','year'])['is_short_form'].mean()` để pivot tỉ lệ short-form
+- `seaborn.heatmap()` (hoặc `plt.imshow()`) với colorbar
+- Diff calculation: `short_form_ratio (year>=2024) - short_form_ratio (year<2020)`, sort desc, head(5)
+- Gọi `plt.savefig()` (không `plt.show()`)
+
+**Expected outcome:** Identify channels that pivoted from long-form to short-form content between 2020-2024 (top 5 channels with largest positive delta).
+
+#### RO2: Tăng trưởng kênh
+**Prompt (verbatim từ REQUIREMENTS.md §8):**
+```
+So sánh median views/video của 8 thể loại, breakdown theo subscriber_tier (3 tier).
+```
+
+**Expected code pattern:**
+- `groupby(['channel_category','subscriber_tier'])` trên dataset videos hoặc channels
+- Tính `median` của `view_count` (hoặc `avg_views_per_video`) cho mỗi nhóm
+- Grouped bar chart 3 cụm (Mid/Large/Mega) × 8 category
+- Gọi `plt.savefig()`
+
+**Expected outcome:** Compare median views across 8 categories and 3 subscriber tiers to identify which combination has the strongest engagement (e.g., Mid-tier creators may outperform Mega in some categories).
+
+#### RO3: Bất thường & Viral
+**Prompt (verbatim từ REQUIREMENTS.md §8):**
+```
+Liệt kê top 10 video có suspect_fake_view=True kèm tỉ lệ like/view của chúng.
+```
+
+**Expected code pattern:**
+- `videos[videos['suspect_fake_view']==True]`
+- Sort by `view_count` desc, `head(10)`
+- Print bảng các cột: `video_id`, `title`, `channel_name`, `view_count`, `like_view_ratio`
+- Output dạng table (in console hoặc render qua matplotlib)
+
+**Expected outcome:** List top 10 videos with suspicious view counts and their like/view ratios — typically very low ratios indicate inflated views.
+
+#### RO4: Nghịch lý tương tác
+**Prompt (verbatim từ REQUIREMENTS.md §8):**
+```
+Heatmap day_of_week × hour_posted vs avg view_count. Giờ nào tốt nhất để đăng?
+```
+
+**Expected code pattern:**
+- `pivot groupby(['day_of_week','hour_posted'])['view_count'].mean()`
+- `matplotlib.imshow()` (hoặc seaborn) với annotation cell có view cao nhất
+- Ghi chú UTC → GMT+7 (`hour_posted + 7 mod 24`)
+- Gọi `plt.savefig()`
+
+**Expected outcome:** Identify the "golden hour" for posting videos (typically 11am-12pm GMT+7 based on dataset patterns).
+
+#### RO5: Creator Economy
+**Prompt (verbatim từ REQUIREMENTS.md §8):**
+```
+Số video is_commercial theo tháng từ 2024-01. Có tăng đột biến sau 10/2024 không?
+```
+
+**Expected code pattern:**
+- Filter `published_at >= '2024-01-01'` (hoặc `year >= 2024`)
+- `groupby(['year','month'])` đếm số video có `is_commercial==True`
+- Line chart với `plt.axvline()` tại 2024-10 (YouTube Shopping ra mắt VN)
+- Gọi `plt.savefig()`
+
+**Expected outcome:** Show increase in commercial videos after YouTube Shopping launch in October 2024 — vertical reference line should clearly mark the inflection point.
+
+### Pass Criteria (applies to all 5 RO tests)
+
+Mỗi test case PHẢI thỏa toàn bộ 5 tiêu chí sau để được coi là PASS:
+
+1. **Vietnamese comments:** Code MUST contain Vietnamese comments giải thích từng bước phân tích.
+2. **Schema compliance:** Code MUST chỉ sử dụng cột có trong schema injected vào system prompt (no hallucinated columns). Cross-reference với `GET /api/data/schema`.
+3. **Save figure:** Code MUST có `plt.savefig(...)` (không `plt.show()`) — sandbox không có display.
+4. **Execution time:** Execution MUST complete trong < 30 giây (executor timeout).
+5. **Output:** MUST sinh ít nhất 1 figure (PNG base64) hoặc table render trong `ResultPanel` của `/ai` page.
+
+### Manual Execution Checklist
+
+Execute in order RO1 → RO2 → RO3 → RO4 → RO5. Estimated time: 25-30 minutes.
+
+**Pre-test setup:**
+- [ ] Start backend: `conda activate vn-dataviz-ai && cd backend && uvicorn app.main:app --reload`
+- [ ] Verify backend health: `curl http://localhost:8000/health` → `{"ok": true}`
+- [ ] Start frontend: `cd frontend && pnpm dev`
+- [ ] Open browser at `http://localhost:3000/ai`
+
+**Per-RO checklist (lặp cho RO1 → RO5):**
+- [ ] Navigate to `/ai`
+- [ ] Submit prompt vào ChatInput (paste verbatim)
+- [ ] Verify code xuất hiện trong Monaco editor
+- [ ] Verify `StatusBadge` hiển thị `pending`
+- [ ] Verify Vietnamese comments hiện diện trong code
+- [ ] Cross-reference column names with schema (`GET /api/data/schema`) — không có cột bịa
+- [ ] Click **Approve** — verify `StatusBadge` chuyển sang `executing` rồi `completed`
+- [ ] Verify figure/table render trong `ResultPanel`
+- [ ] Verify execution time < 30s (hiển thị trong panel)
+- [ ] Navigate to `/logs` — verify request mới xuất hiện với status `completed`
+- [ ] Click row vào `/logs/{id}` — verify prompt, AI code, figure render đầy đủ
+
+**Edit detection test (using RO1):**
+- [ ] Submit RO1 prompt; chờ code generated
+- [ ] Edit 1 dòng trong Monaco (vd: đổi tên biến hoặc thêm comment)
+- [ ] Verify `StatusBadge` chuyển từ `pending` → `edited`
+- [ ] Click **Approve**
+- [ ] Verify edited code (không phải ai_code gốc) được thực thi — kiểm tra qua `/logs/{id}` field `was_edited=true` và `edited_code` khớp với gì user đã sửa
+
+**Error handling test (using RO3):**
+- [ ] Submit RO3 prompt; chờ code generated
+- [ ] Cố ý phá code (vd: xóa dấu ngoặc đóng, hoặc đổi tên cột thành `nonexistent_column`)
+- [ ] Click **Approve**
+- [ ] Verify `StatusBadge` hiển thị `failed`
+- [ ] Verify error message + traceback hiển thị trong `ResultPanel`
+- [ ] Navigate to `/logs` — verify request có status `failed` với error_message lưu trong DB
+
+**Pass criteria for the suite:** 5/5 RO tests PASS + edit test PASS + error test handled gracefully. Tổng thời gian ≤ 30 phút.
+
 ---
 
 ## Mở rộng giai đoạn 2 (sau khi MVP pass)

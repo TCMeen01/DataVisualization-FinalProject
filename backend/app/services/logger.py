@@ -136,13 +136,23 @@ async def get_request(request_id: str) -> dict | None:
     if row is None:
         return None
     d = dict(row)
+    # Flatten execution_result_json fields into top-level response
     if d.get("execution_result_json"):
         try:
-            d["execution_result"] = json.loads(d["execution_result_json"])
+            exec_result = json.loads(d["execution_result_json"])
+            # Flatten fields: stdout, stderr, figures, execution_time_ms, error_message
+            d["stdout"] = exec_result.get("stdout")
+            d["stderr"] = exec_result.get("stderr")
+            d["figures"] = exec_result.get("figures", [])
+            # execution_time_ms and error_message are already top-level in DB
         except json.JSONDecodeError:
-            d["execution_result"] = None
+            d["stdout"] = None
+            d["stderr"] = None
+            d["figures"] = []
     else:
-        d["execution_result"] = None
+        d["stdout"] = None
+        d["stderr"] = None
+        d["figures"] = []
     if d.get("data_context_json"):
         try:
             d["data_context"] = json.loads(d["data_context_json"])
@@ -151,6 +161,9 @@ async def get_request(request_id: str) -> dict | None:
     else:
         d["data_context"] = None
     d["was_edited"] = bool(d.get("was_edited") or 0)
+    # Rename fields to match frontend expectations
+    d["prompt"] = d.pop("user_prompt")
+    d["explanation"] = d.pop("ai_explanation", None)
     return d
 
 
@@ -171,7 +184,7 @@ async def list_requests(
         total = int(total_row["n"]) if total_row else 0
         async with db.execute(
             f"""
-            SELECT id, created_at, user_prompt, status, execution_time_ms, was_edited
+            SELECT id, created_at, user_prompt AS prompt, status, execution_time_ms, was_edited, execution_result_json
             FROM requests
             {where}
             ORDER BY created_at DESC
@@ -184,5 +197,14 @@ async def list_requests(
     for r in rows:
         d = dict(r)
         d["was_edited"] = bool(d.get("was_edited") or 0)
+        # Check if has figures for the list view
+        d["has_figures"] = False
+        if d.get("execution_result_json"):
+            try:
+                exec_result = json.loads(d["execution_result_json"])
+                d["has_figures"] = bool(exec_result.get("figures"))
+            except json.JSONDecodeError:
+                pass
+        d.pop("execution_result_json", None)
         items.append(d)
     return {"total": total, "items": items}

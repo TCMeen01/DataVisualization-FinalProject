@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import ai, data, execute, logs
+from app.api import ai, data, execute, gallery, logs
 from app.config import settings
 from app.services import data_store
 from app.services.logger import init_db
@@ -31,6 +31,7 @@ app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(execute.router, prefix="/api/execute", tags=["execute"])
 app.include_router(logs.router, prefix="/api/logs", tags=["logs"])
 app.include_router(data.router, prefix="/api/data", tags=["data"])
+app.include_router(gallery.router, prefix="/api/gallery", tags=["gallery"])
 
 
 @app.get("/health")

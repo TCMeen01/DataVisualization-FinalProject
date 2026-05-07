@@ -15,3 +15,15 @@ CREATE TABLE IF NOT EXISTS requests (
 
 CREATE INDEX IF NOT EXISTS idx_requests_created ON requests(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_requests_status  ON requests(status);
+
+CREATE TABLE IF NOT EXISTS saved_charts (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  figure_base64 TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  request_id TEXT,
+  FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_saved_charts_created ON saved_charts(created_at DESC);

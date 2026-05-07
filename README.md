@@ -1,123 +1,121 @@
-# vn-dataviz-ai
+# Vietnam YouTube Analytics Dashboard
 
-Dashboard trực quan hóa dữ liệu Việt Nam + module AI hỗ trợ phân tích theo mô hình **Human-in-the-loop**.
+Dashboard trực quan hóa dữ liệu YouTube Việt Nam + module AI hỗ trợ phân tích theo mô hình **Human-in-the-loop**.
 
-Đọc [INIT.md](INIT.md) để biết toàn bộ ngữ cảnh, principles và roadmap.
+Phân tích 30,778 video từ 56 kênh YouTube hàng đầu Việt Nam (2019-2024) với AI-powered code generation.
 
-## Kiến trúc nhanh
+## Prerequisites
 
-```
-+------------------+        HTTP        +-------------------+
-|  Next.js 16 (3000)| <----------------> |  FastAPI (8000)   |
-|  - /              |                    |  - /api/ai        |
-|  - /ai            |                    |  - /api/execute   |
-|  - /logs          |                    |  - /api/logs      |
-|  - shadcn + Tailwind                   |  - /api/data      |
-+------------------+                    +---------+---------+
-                                                  |
-                                                  v
-                                         SQLite (logs.db)
-                                         sandbox/ (subprocess)
-                                         data/sample.csv
-```
+Trước khi bắt đầu, đảm bảo bạn đã cài đặt:
 
-## Yêu cầu hệ thống
+- **conda** (Miniconda hoặc Anaconda) — để quản lý Python environment
+- **Node.js 18+** và **pnpm** — cho frontend
+- **CSV files** — đặt `videos_processed.csv` và `channels_processed.csv` vào `backend/data/`
+- **.env file** — tạo file `.env` ở thư mục gốc với `GEMINI_API_KEY=your_key_here`
 
-- Node.js >= 20
-- pnpm >= 10
-- Python 3.11 (qua conda env)
-- conda (Miniconda/Anaconda)
+## Setup
 
-## Setup lần đầu
-
-### 1. Backend (Python via conda)
+Chỉ cần 5 lệnh để chạy toàn bộ ứng dụng:
 
 ```powershell
-# Tạo env (đã làm sẵn ở máy init): conda create -n vn-dataviz-ai -c conda-forge python=3.11 -y
+# 1. Kích hoạt conda environment (tạo trước: conda create -n vn-dataviz-ai python=3.11)
 conda activate vn-dataviz-ai
-cd backend
-pip install -r requirements.txt
-copy ..\.env.example ..\.env   # rồi điền GEMINI_API_KEY nếu có
-```
 
-### 2. Frontend
+# 2. Cài đặt dependencies cho backend
+cd backend && pip install -r requirements.txt
 
-```powershell
-cd frontend
-pnpm install
-```
-
-## Chạy dev
-
-Mở 2 terminal song song:
-
-**Terminal 1 — Backend (port 8000):**
-
-```powershell
-conda activate vn-dataviz-ai
-cd backend
+# 3. Chạy backend (port 8000)
 uvicorn app.main:app --reload
-```
 
-Kiểm tra: http://localhost:8000/health → `{"ok": true}`
+# Mở terminal mới:
+# 4. Cài đặt dependencies cho frontend
+cd frontend && pnpm install
 
-**Terminal 2 — Frontend (port 3000):**
-
-```powershell
-cd frontend
+# 5. Chạy frontend (port 3000)
 pnpm dev
 ```
 
-Mở: http://localhost:3000
+Truy cập: **http://localhost:3000**
 
-## Cấu trúc
+## Project Structure
 
 ```
 .
-├── INIT.md              # Spec gốc của đồ án
-├── DESIGN.md            # Design system tham chiếu (Cohere)
-├── README.md
-├── .env.example
 ├── backend/             # FastAPI + Python 3.11
 │   ├── app/
-│   │   ├── main.py
-│   │   ├── config.py
 │   │   ├── api/         # 4 routers: ai, execute, logs, data
-│   │   ├── services/    # llm/, executor, logger
-│   │   ├── models/      # pydantic schemas
-│   │   └── db/schema.sql
-│   ├── data/sample.csv
-│   ├── sandbox/
-│   ├── pyproject.toml
-│   └── requirements.txt
-├── frontend/            # Next.js 16 + Tailwind 4 + shadcn
-│   ├── app/             # /, /ai, /logs
+│   │   ├── services/    # llm/, executor, logger, data_store
+│   │   └── db/          # SQLite schema
+│   ├── data/            # CSV files (gitignored)
+│   └── sandbox/         # Code execution environment
+├── frontend/            # Next.js 16 + React 19 + Tailwind 4
+│   ├── app/             # 8 routes: /, /short-form, /channels, /anomaly, /interaction, /economy, /ai, /logs
 │   ├── components/      # ui/, dashboard/, ai/, charts/
-│   └── lib/api.ts
-└── docs/
-    ├── architecture.md
-    ├── api-spec.md
-    └── design-system.md
+│   └── lib/api.ts       # Typed API client
+├── REQUIREMENTS.md      # Full project specification
+├── PLAN.md              # Implementation roadmap
+└── .env                 # GEMINI_API_KEY (create from .env.example)
 ```
 
-## API endpoints (giai đoạn init: trả mock)
+## Features
 
-| Method | Path                   | Mục đích                          |
-|--------|------------------------|----------------------------------|
-| GET    | `/health`              | Health check                      |
-| POST   | `/api/ai/generate`     | Sinh code Python từ prompt       |
-| POST   | `/api/execute`         | Chạy code đã approve             |
-| GET    | `/api/logs`            | Danh sách request                 |
-| GET    | `/api/logs/{id}`       | Chi tiết 1 request                |
-| GET    | `/api/data/schema`     | Schema dataset                    |
-| GET    | `/api/data/preview`    | Preview rows                      |
+### 📊 Dashboard (6 pages, 13+ charts)
+- **Overview**: KPIs, category distribution, views by year, short-form ratio
+- **Short-form**: Heatmap by channel/year, stacked bar chart
+- **Channels**: Box plot by category, scatter plot subscriber vs views
+- **Anomaly**: Suspect fake views detection, viral videos table
+- **Interaction**: Engagement rate analysis, golden hour heatmap
+- **Economy**: Commercial video trends, revenue analysis
 
-Chi tiết schema xem `docs/api-spec.md`.
+### 🤖 AI Module
+- Natural language → Python code generation (Gemini)
+- Monaco editor with syntax highlighting
+- Human-in-the-loop approval workflow
+- Sandboxed execution with figure rendering
+- Full audit trail in SQLite
 
-## Verify checklist (Definition of Done — INIT §11)
+### 📝 Logs
+- Request history with filtering and pagination
+- Detailed view with code comparison (AI vs edited)
+- Execution results with figures and stdout/stderr
 
-- [ ] `uvicorn app.main:app --reload` chạy được, `GET /health` trả `{"ok": true}`
-- [ ] `pnpm dev` chạy được, mở `http://localhost:3000` thấy 3 page render
-- [ ] Frontend gọi `GET /api/data/schema` (mock) và hiển thị schema
-- [ ] SQLite `logs.db` được tạo tự động khi backend khởi động
-- [ ] `git log` có ít nhất 1 commit
+## Verification & Testing
+
+**Pre-demo verification guide**: [VERIFICATION.md](VERIFICATION.md)
+
+Automated verification scripts (< 10 minutes total):
+- **Backend smoke tests**: `backend/verify_backend.ps1` (9 endpoint checks)
+- **AI flow verification**: `tests/verify_ai_flow.ps1` (end-to-end AI workflow)
+- **RO test cases**: `tests/verify_ro_tests.ps1` (5 Research Objective tests)
+- **Frontend checklist**: `frontend/VERIFICATION_CHECKLIST.md` (manual, ~5 min)
+
+Quick verification:
+```powershell
+# Backend
+cd backend && .\verify_backend.ps1
+
+# AI + RO tests
+cd ..\tests && .\verify_ai_flow.ps1 && .\verify_ro_tests.ps1
+
+# Frontend
+cd ..\frontend && pnpm lint && pnpm build
+```
+
+See [VERIFICATION.md](VERIFICATION.md) for detailed instructions, expected outputs, and troubleshooting.
+
+## Links
+
+- **Full Specification**: [REQUIREMENTS.md](REQUIREMENTS.md)
+- **Implementation Plan**: [PLAN.md](PLAN.md)
+- **Architecture**: [docs/architecture.md](docs/architecture.md)
+- **API Spec**: [docs/api-spec.md](docs/api-spec.md)
+- **Design System**: [docs/design-system.md](docs/design-system.md)
+
+## Tech Stack
+
+**Backend**: FastAPI, Python 3.11, SQLite, Google Gemini API, pandas, matplotlib  
+**Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, Recharts, Plotly, Monaco Editor
+
+## License
+
+Educational project for Data Visualization course.
