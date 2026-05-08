@@ -28,6 +28,11 @@ export default function AnomalyPage() {
   const [yearRange, setYearRange] = useState<number[]>([2015, 2026]);
   const [channels, setChannels] = useState<string[]>([]);
 
+  // Insight state
+  const [insight, setInsight] = useState<string>("");
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState<string>("");
+
   // Load channel list on mount
   useEffect(() => {
     api
@@ -57,9 +62,67 @@ export default function AnomalyPage() {
     return () => clearTimeout(timer);
   }, [channelId, yearRange]);
 
+  const resetInsight = () => {
+    setInsight("");
+    setInsightError("");
+  };
+
+  const setChannelFilter = (value: string | null) => {
+    setChannelId(value);
+    resetInsight();
+  };
+
+  const setYearFilter = (value: number[]) => {
+    setYearRange(value);
+    resetInsight();
+  };
+
+  const calculateSummary = (data: AnomalyData) => {
+    const suspectVideos = data.d1_scatter.filter((v) => v.suspect_fake_view);
+    const topVideo = data.d2_viral[0];
+
+    return {
+      total_videos: data.d1_scatter.length,
+      suspect_count: suspectVideos.length,
+      top_channel: topVideo?.channel || "",
+      top_views: topVideo?.view_count || 0,
+      viral_count: data.d2_viral.length,
+    };
+  };
+
+  const handleGetInsight = async () => {
+    if (!data) return;
+
+    setInsightLoading(true);
+    setInsightError("");
+
+    try {
+      const summary = calculateSummary(data);
+      const filters = {
+        channel_id: channelId === "All" ? null : channelId,
+        year_from: yearRange[0],
+        year_to: yearRange[1],
+      };
+
+      const response = await api.generateInsight({
+        page: "anomaly",
+        filters,
+        summary,
+      });
+
+      setInsight(response.insight);
+    } catch (error) {
+      setInsightError(
+        error instanceof Error ? error.message : "Không thể tạo insight. Vui lòng thử lại."
+      );
+    } finally {
+      setInsightLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setChannelId("All");
-    setYearRange([2015, 2026]);
+    resetInsight();
   };
 
   return (
@@ -67,7 +130,7 @@ export default function AnomalyPage() {
       <FilterBar onReset={handleReset}>
         <div className="flex items-center gap-2">
           <label className={`text-sm ${TEXT_COLORS.slate}`}>Kênh:</label>
-          <Select value={channelId} onValueChange={setChannelId}>
+          <Select value={channelId} onValueChange={setChannelFilter}>
             <SelectTrigger className="w-48">
               <SelectValue />
             </SelectTrigger>
@@ -87,7 +150,7 @@ export default function AnomalyPage() {
           <div className="w-48">
             <Slider
               value={yearRange}
-              onValueChange={(val) => setYearRange(val as number[])}
+              onValueChange={(val) => setYearFilter(val as number[])}
               min={2015}
               max={2026}
               step={1}
@@ -154,7 +217,10 @@ export default function AnomalyPage() {
             </div>
 
             <InsightCard
-              content="Lan truyền mạnh nhất: FLife TV đạt 620Tr lượt xem. Âm nhạc và Thiếu nhi chiếm áp đảo số video lan truyền (123 + 138). Một số video có lượt xem rất cao nhưng tỉ lệ thích/lượt xem thấp bất thường."
+              content={insight}
+              loading={insightLoading}
+              error={insightError}
+              onGetInsight={handleGetInsight}
             />
           </>
         )}

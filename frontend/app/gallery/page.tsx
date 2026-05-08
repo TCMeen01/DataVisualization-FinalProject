@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { Trash2, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { api, type SavedChart } from "@/lib/api";
+import { useChartFilter } from "@/lib/hooks/useChartFilter";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -29,13 +31,17 @@ function truncate(s: string, n: number): string {
   return s.length > n ? `${s.slice(0, n)}…` : s;
 }
 
-export default function GalleryPage() {
+function GalleryContent() {
   const [charts, setCharts] = useState<SavedChart[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SavedChart | null>(null);
   const [viewTarget, setViewTarget] = useState<SavedChart | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Use the chart filter hook with URL sync
+  const { filters, filteredCharts, updateFilters, clearFilters, hasActiveFilters } =
+    useChartFilter(charts);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,6 +96,37 @@ export default function GalleryPage() {
         </p>
       </header>
 
+      {/* Search filter */}
+      <div className="mb-6 flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#93939f]" />
+          <Input
+            type="text"
+            placeholder="Tìm kiếm chart..."
+            value={filters.search || ""}
+            onChange={(e) => updateFilters({ search: e.target.value })}
+            className="pl-9"
+          />
+        </div>
+        {hasActiveFilters && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearFilters}
+            className="gap-2"
+          >
+            <X className="h-4 w-4" />
+            Xóa bộ lọc
+          </Button>
+        )}
+      </div>
+
+      {hasActiveFilters && (
+        <p className="mb-4 text-sm text-[#75758a]">
+          Hiển thị {filteredCharts.length} / {charts.length} chart
+        </p>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#f2f2f2] border-t-[#212121]" />
@@ -111,15 +148,24 @@ export default function GalleryPage() {
             </p>
           </CardContent>
         </Card>
+      ) : filteredCharts.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <p className="text-[#75758a]">
+              Không tìm thấy chart nào phù hợp với bộ lọc.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {charts.map((chart) => (
+          {filteredCharts.map((chart) => (
             <Card
               key={chart.id}
               className="group cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
               onClick={() => setViewTarget(chart)}
             >
               <div className="relative bg-[#f9f9f9]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={chart.figure_base64}
                   alt={chart.title}
@@ -198,6 +244,7 @@ export default function GalleryPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={viewTarget.figure_base64}
                   alt={viewTarget.title}
@@ -217,5 +264,13 @@ export default function GalleryPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function GalleryPage() {
+  return (
+    <Suspense fallback={<div className="px-10 py-12">Đang tải...</div>}>
+      <GalleryContent />
+    </Suspense>
   );
 }

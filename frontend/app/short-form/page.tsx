@@ -27,6 +27,11 @@ export default function ShortFormPage() {
   const [yearRange, setYearRange] = useState<number[]>([2015, 2026]);
   const [category, setCategory] = useState<string | null>("All");
 
+  // Insight state
+  const [insight, setInsight] = useState<string>("");
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState<string>("");
+
   // Debounced fetch
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -45,9 +50,68 @@ export default function ShortFormPage() {
     return () => clearTimeout(timer);
   }, [yearRange, category]);
 
+  const resetInsight = () => {
+    setInsight("");
+    setInsightError("");
+  };
+
+  const setYearFilter = (value: number[]) => {
+    setYearRange(value);
+    resetInsight();
+  };
+
+  const setCategoryFilter = (value: string | null) => {
+    setCategory(value);
+    resetInsight();
+  };
+
+  const calculateSummary = (data: ShortFormData) => {
+    const totalShort = data.b2_bar.reduce((sum, item) => sum + item.short, 0);
+    const totalLong = data.b2_bar.reduce((sum, item) => sum + item.long, 0);
+    const shortFormRatio = totalShort / (totalShort + totalLong);
+
+    return {
+      short_form_ratio: shortFormRatio,
+      year_from: yearRange[0],
+      year_to: yearRange[1],
+      category: category === "All" ? null : category,
+    };
+  };
+
+  const handleGetInsight = async () => {
+    if (!data) return;
+
+    setInsightLoading(true);
+    setInsightError("");
+
+    try {
+      const summary = calculateSummary(data);
+      const filters = {
+        year_from: yearRange[0],
+        year_to: yearRange[1],
+        category: category === "All" ? null : category,
+      };
+
+      const response = await api.generateInsight({
+        page: "short-form",
+        filters,
+        summary,
+      });
+
+      setInsight(response.insight);
+    } catch (error) {
+      setInsightError(
+        error instanceof Error ? error.message : "Không thể tạo insight. Vui lòng thử lại."
+      );
+    } finally {
+      setInsightLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setYearRange([2015, 2026]);
     setCategory("All");
+    resetInsight();
   };
 
   return (
@@ -58,7 +122,7 @@ export default function ShortFormPage() {
           <div className="w-48">
             <Slider
               value={yearRange}
-              onValueChange={(val) => setYearRange(val as number[])}
+              onValueChange={(val) => setYearFilter(val as number[])}
               min={2015}
               max={2026}
               step={1}
@@ -71,7 +135,7 @@ export default function ShortFormPage() {
 
         <div className="flex items-center gap-2">
           <label className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</label>
-          <Select value={category} onValueChange={setCategory}>
+          <Select value={category} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -136,7 +200,10 @@ export default function ShortFormPage() {
             </div>
 
             <InsightCard
-              content="Hài có tỉ lệ video ngắn cao nhất (62.8%), Nhật ký đời sống thấp nhất (13.4%). Vài kênh xoay trục từ ~0% → ~90% chỉ trong 2 năm."
+              content={insight}
+              loading={insightLoading}
+              error={insightError}
+              onGetInsight={handleGetInsight}
             />
           </>
         )}

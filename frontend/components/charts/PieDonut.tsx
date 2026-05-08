@@ -14,16 +14,16 @@ import {
 import { CATEGORY_COLORS, CHART_PALETTE } from "@/lib/constants";
 
 interface PieDonutProps {
-  data: { name: string; value: number }[];
+  data: { name: string; value: number; category?: string }[];
   onSliceClick?: (name: string) => void;
   selectedSlice?: string | null;
 }
 
 export function PieDonut({ data, onSliceClick, selectedSlice }: PieDonutProps) {
-  const handleClick = (entry: { name?: string }) => {
-    if (onSliceClick && entry.name) {
-      // Toggle: clicking selected slice resets filter
-      onSliceClick(entry.name === selectedSlice ? "" : entry.name);
+  const handleClick = (entry: { name?: string; category?: string }) => {
+    const value = entry.category ?? entry.name;
+    if (onSliceClick && value) {
+      onSliceClick(value === selectedSlice ? "" : value);
     }
   };
 
@@ -42,15 +42,19 @@ export function PieDonut({ data, onSliceClick, selectedSlice }: PieDonutProps) {
           strokeWidth={1}
           stroke="#f2f2f2"
         >
-          {data.map((entry, index) => (
-            <Cell
-              key={entry.name}
-              fill={CATEGORY_COLORS[entry.name] ?? CHART_PALETTE[index % CHART_PALETTE.length]}
-              opacity={
-                !selectedSlice || selectedSlice === entry.name ? 1 : 0.35
-              }
-            />
-          ))}
+          {data.map((entry, index) => {
+            const isSelected = selectedSlice === (entry.category ?? entry.name);
+            const hasSelection = selectedSlice !== null && selectedSlice !== "";
+
+            return (
+              <Cell
+                key={entry.name}
+                fill={CATEGORY_COLORS[entry.category ?? entry.name] ?? CHART_PALETTE[index % CHART_PALETTE.length]}
+                opacity={!hasSelection || isSelected ? 1 : 0.4}
+                className="transition-opacity duration-300 hover:opacity-70"
+              />
+            );
+          })}
         </Pie>
         <Tooltip
           contentStyle={{

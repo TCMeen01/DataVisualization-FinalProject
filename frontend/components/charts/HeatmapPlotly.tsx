@@ -1,5 +1,4 @@
 "use client";
-import { TruckElectric } from "lucide-react";
 /**
  * HeatmapPlotly — dynamic-imported Plotly heatmap.
  * Used for: Chart B1 (channel×year short_form_ratio), Chart E2 (day×hour views).

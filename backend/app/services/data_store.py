@@ -113,19 +113,8 @@ def _records(df: pd.DataFrame) -> list[dict[str, Any]]:
 def get_overview(category: str | None = None) -> dict[str, Any]:
     v, c = _require_loaded()
     
-    # A1: Always show all categories
-    a1_src = (
-        v.groupby("channel_category", dropna=True)
-        .size()
-        .reset_index(name="video_count")
-        .sort_values("video_count", ascending=False)
-    )
-    a1 = _records(a1_src)
-
-    # Filter data for other charts and KPIs
     filtered = v if not category else v[v["channel_category"] == category]
-    
-    # Calculate KPIs from filtered data
+
     total_videos = int(len(filtered))
     total_channels = int(filtered["channel_name"].nunique()) if "channel_name" in filtered.columns else 0
     total_views = int(filtered["view_count"].sum()) if "view_count" in filtered.columns else 0
@@ -133,28 +122,50 @@ def get_overview(category: str | None = None) -> dict[str, Any]:
         float(filtered["is_short_form"].mean()) if "is_short_form" in filtered.columns else 0.0
     )
 
-    a2_src = (
-        filtered.groupby("year", dropna=True)["view_count"]
-        .sum()
+    a1_src = (
+        filtered.groupby("channel_category", dropna=True)
+        .agg(
+            video_count=("video_id", "size"),
+            total_views=("view_count", "sum"),
+            total_channels=("channel_name", "nunique"),
+            short_form_ratio=("is_short_form", "mean"),
+        )
         .reset_index()
-        .rename(columns={"view_count": "total_views"})
+        .sort_values("video_count", ascending=False)
+    )
+    a1 = _records(a1_src)
+
+    a2_src = (
+        filtered.groupby(["channel_category", "year"], dropna=True)
+        .agg(
+            total_views=("view_count", "sum"),
+            video_count=("video_id", "size"),
+            total_channels=("channel_name", "nunique"),
+            short_form_ratio=("is_short_form", "mean"),
+        )
+        .reset_index()
         .sort_values("year")
     )
     a2 = _records(a2_src)
 
     a3_rows: list[dict[str, Any]] = []
     if "year" in filtered.columns and "is_short_form" in filtered.columns:
-        grouped = filtered.groupby("year", dropna=True)
+        grouped = filtered.groupby(["channel_category", "year"], dropna=True)
         for year, sub in grouped:
             total = int(len(sub))
             shorts = int(sub["is_short_form"].sum())
             longs = total - shorts
             a3_rows.append(
                 {
-                    "year": int(year),
+                    "year": int(year[1] if isinstance(year, tuple) else year),
+                    "channel_category": str(year[0]) if isinstance(year, tuple) else None,
                     "short_count": shorts,
                     "long_count": longs,
                     "short_ratio": (shorts / total) if total else 0.0,
+                    "video_count": total,
+                    "total_views": int(sub["view_count"].sum()),
+                    "total_channels": int(sub["channel_name"].nunique()),
+                    "short_form_ratio": (shorts / total) if total else 0.0,
                 }
             )
         a3_rows.sort(key=lambda r: r["year"])

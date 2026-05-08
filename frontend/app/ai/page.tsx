@@ -7,6 +7,9 @@ import { ChatInput } from "@/components/ai/ChatInput";
 import { CodeBlock } from "@/components/ai/CodeBlock";
 import { StatusBadge, type RequestStatus } from "@/components/ai/StatusBadge";
 import { ResultPanel } from "@/components/ai/ResultPanel";
+import { SkeletonLoader } from "@/components/ai/SkeletonLoader";
+import { GenerationProgress } from "@/components/ai/GenerationProgress";
+import { useStreamingResponse } from "@/lib/hooks/useStreamingResponse";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -31,27 +34,42 @@ export default function AIWorkspacePage() {
   const [result, setResult] = useState<ResultState | null>(null);
   const [lastPrompt, setLastPrompt] = useState("");
 
-  const handleSubmit = async (prompt: string) => {
-    try {
-      setRequest((prev) => (prev ? { ...prev, status: "generating" } : null));
-      setResult(null);
+  // Feature flag for streaming (default: true)
+  const enableStreaming =
+    process.env.NEXT_PUBLIC_ENABLE_STREAMING !== "false";
 
-      const response = await api.generate(prompt);
-
-      setRequest({
-        id: response.request_id,
-        ai_code: response.code,
-        edited_code: null,
-        explanation: response.explanation,
-        status: "pending",
-      });
-      setLastPrompt(prompt);
-
+  // Use streaming hook
+  const streaming = useStreamingResponse({
+    enableStreaming,
+    onComplete: (requestId) => {
+      if (requestId) {
+        setRequest((prev) =>
+          prev
+            ? { ...prev, id: requestId, status: "pending" }
+            : {
+                id: requestId,
+                ai_code: streaming.code,
+                edited_code: null,
+                explanation: streaming.explanation,
+                status: "pending",
+              }
+        );
+      }
       toast.success("Code đã được sinh!");
-    } catch (error) {
-      toast.error("Lỗi khi sinh code: " + (error as Error).message);
+    },
+    onError: (error) => {
+      toast.error("Lỗi khi sinh code: " + error);
       setRequest(null);
-    }
+    },
+  });
+
+  const handleSubmit = async (prompt: string) => {
+    setRequest(null);
+    setResult(null);
+    setLastPrompt(prompt);
+
+    // Start streaming
+    await streaming.startStreaming(prompt);
   };
 
   const handleCodeChange = (newCode: string) => {
@@ -120,9 +138,41 @@ export default function AIWorkspacePage() {
     }, 1500);
   };
 
-  const isLoading = request?.status === "generating";
+  const isLoading = streaming.isStreaming;
   const showActions =
     request && (request.status === "pending" || request.status === "edited");
+
+  // Determine generation phase for progress indicator
+  const generationPhase = streaming.isStreaming
+    ? streaming.code
+      ? "streaming"
+      : "connecting"
+    : "complete";
+
+  // Show skeleton when waiting for first chunk
+  const showSkeleton = streaming.isStreaming && !streaming.code;
+
+  // Update request state as streaming progresses
+  if (streaming.isStreaming && streaming.code && !request) {
+    setRequest({
+      id: streaming.requestId || "",
+      ai_code: streaming.code,
+      edited_code: null,
+      explanation: streaming.explanation,
+      status: "generating",
+    });
+  } else if (streaming.isStreaming && streaming.code && request) {
+    if (
+      request.ai_code !== streaming.code ||
+      request.explanation !== streaming.explanation
+    ) {
+      setRequest({
+        ...request,
+        ai_code: streaming.code,
+        explanation: streaming.explanation,
+      });
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -159,11 +209,22 @@ export default function AIWorkspacePage() {
                 <StatusBadge status={request.status} />
               </CardHeader>
               <CardContent>
-                <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-600">
-                  {request.explanation}
-                </p>
+                {streaming.isStreaming && !streaming.explanation ? (
+                  <div className="h-4 w-3/4 animate-pulse rounded bg-[#d4d4d8]" />
+                ) : (
+                  <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-600">
+                    {request.explanation}
+                  </p>
+                )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Show progress indicator during streaming */}
+          {streaming.isStreaming && (
+            <div className="mt-6">
+              <GenerationProgress phase={generationPhase} />
+            </div>
           )}
         </div>
 
@@ -174,19 +235,21 @@ export default function AIWorkspacePage() {
               <CardTitle className="text-zinc-100">2. Mã Python</CardTitle>
             </CardHeader>
             <CardContent>
-              {request ? (
+              {showSkeleton ? (
+                <SkeletonLoader />
+              ) : request ? (
                 <>
                   <CodeBlock
                     value={request.edited_code ?? request.ai_code}
                     onChange={handleCodeChange}
-                    readOnly={request.status === "executing"}
+                    readOnly={request.status === "executing" || streaming.isStreaming}
                   />
 
                   {showActions && (
                     <div className="mt-4 flex gap-2">
                       <Button
                         onClick={handleApprove}
-                        disabled={request.status === "executing"}
+                        disabled={request.status === "executing" || streaming.isStreaming}
                         className="flex-1"
                       >
                         Duyệt và chạy
@@ -194,7 +257,7 @@ export default function AIWorkspacePage() {
                       <Button
                         onClick={handleReject}
                         variant="outline"
-                        disabled={request.status === "executing"}
+                        disabled={request.status === "executing" || streaming.isStreaming}
                       >
                         Từ chối
                       </Button>

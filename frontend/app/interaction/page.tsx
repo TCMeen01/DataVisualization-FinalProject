@@ -18,13 +18,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CATEGORIES, CHART_PALETTE, labelCategory, labelDuration, labelSubscriberTier } from "@/lib/constants";
-import { COLORS, TEXT_COLORS, BG_COLORS, BORDER_COLORS } from "@/lib/design-tokens";
+import { COLORS, TEXT_COLORS } from "@/lib/design-tokens";
 
 export default function InteractionPage() {
   const [data, setData] = useState<InteractionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [durationGroup, setDurationGroup] = useState<string | null>("All");
+
+  // Insight state
+  const [insight, setInsight] = useState<string>("");
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState<string>("");
 
   // Debounced fetch
   useEffect(() => {
@@ -43,15 +48,76 @@ export default function InteractionPage() {
     return () => clearTimeout(timer);
   }, [selectedCategories, durationGroup]);
 
+  const resetInsight = () => {
+    setInsight("");
+    setInsightError("");
+  };
+
+  const setDurationFilter = (value: string | null) => {
+    setDurationGroup(value);
+    resetInsight();
+  };
+
+  const calculateSummary = (data: InteractionData) => {
+    // Find peak hour from heatmap
+    let maxViews = 0;
+    let peakHour = 0;
+    data.e2_heatmap.z.forEach((row) => {
+      row.forEach((views, hourIdx) => {
+        if (views > maxViews) {
+          maxViews = views;
+          peakHour = hourIdx;
+        }
+      });
+    });
+
+    return {
+      peak_hour: peakHour,
+      duration_group: durationGroup === "All" ? null : durationGroup,
+      categories: selectedCategories.length > 0 ? selectedCategories : null,
+    };
+  };
+
+  const handleGetInsight = async () => {
+    if (!data) return;
+
+    setInsightLoading(true);
+    setInsightError("");
+
+    try {
+      const summary = calculateSummary(data);
+      const filters = {
+        categories: selectedCategories.length > 0 ? selectedCategories : null,
+        duration_group: durationGroup === "All" ? null : durationGroup,
+      };
+
+      const response = await api.generateInsight({
+        page: "interaction",
+        filters,
+        summary,
+      });
+
+      setInsight(response.insight);
+    } catch (error) {
+      setInsightError(
+        error instanceof Error ? error.message : "Không thể tạo insight. Vui lòng thử lại."
+      );
+    } finally {
+      setInsightLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setSelectedCategories([]);
     setDurationGroup("All");
+    resetInsight();
   };
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     );
+    resetInsight();
   };
 
   return (
@@ -81,7 +147,7 @@ export default function InteractionPage() {
 
         <div className="flex items-center gap-2">
           <label className={`text-sm ${TEXT_COLORS.slate}`}>Độ dài:</label>
-          <Select value={durationGroup} onValueChange={setDurationGroup}>
+          <Select value={durationGroup} onValueChange={setDurationFilter}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -118,7 +184,7 @@ export default function InteractionPage() {
                 description="Biểu đồ hộp với 3 nhóm người đăng ký"
               >
                 <BoxPlotly
-                  traces={data.e1_box.map((item, index) => ({
+                  traces={data.e1_box.map((item) => ({
                     name: `${labelDuration(item.label)} (${labelSubscriberTier(item.tier)})`,
                     y: item.values,
                     color:
@@ -150,7 +216,10 @@ export default function InteractionPage() {
             </div>
 
             <InsightCard
-              content="Giờ vàng 11h–12h trưa. Trò chơi có tỉ lệ tương tác cao nhất (1.88%) dù tỉ lệ video ngắn thấp. Kiểm định nhóm trung bình > nhóm siêu lớn về tỉ lệ tương tác?"
+              content={insight}
+              loading={insightLoading}
+              error={insightError}
+              onGetInsight={handleGetInsight}
             />
           </>
         )}

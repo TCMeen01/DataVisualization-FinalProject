@@ -30,6 +30,10 @@ interface LineChartProps {
   referenceLine?: string | number;
   referenceLabel?: string;
   yFormatter?: (v: number) => string;
+  /** Optional: selected year for highlighting */
+  selectedYear?: number | null;
+  /** Optional: callback when a data point is clicked */
+  onYearClick?: (year: number) => void;
 }
 
 export function LineChart({
@@ -39,10 +43,27 @@ export function LineChart({
   referenceLine,
   referenceLabel,
   yFormatter = formatNumber,
+  selectedYear,
+  onYearClick,
 }: LineChartProps) {
+  const handleClick = (data: unknown) => {
+    if (onYearClick && data && typeof data === "object") {
+      const entry = data as Record<string, unknown>;
+      const year = entry[xKey];
+      if (typeof year === "number") {
+        onYearClick(year);
+      }
+    }
+  };
+
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <RechartsLineChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+      <RechartsLineChart
+        data={data}
+        margin={{ top: 4, right: 16, left: 0, bottom: 4 }}
+        onClick={handleClick}
+        style={{ cursor: onYearClick ? "pointer" : "default" }}
+      >
         <CartesianGrid stroke="#f2f2f2" strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey={xKey}
@@ -82,18 +103,42 @@ export function LineChart({
             label={{ value: referenceLabel ?? "", fill: CHART_PALETTE[7], fontSize: 11 }}
           />
         )}
-        {lines.map((l, index) => (
-          <Line
-            key={l.key}
-            type="monotone"
-            dataKey={l.key}
-            name={l.label ?? l.key}
-            stroke={l.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4, fill: l.color ?? CHART_PALETTE[index % CHART_PALETTE.length] }}
-          />
-        ))}
+        {lines.map((l, index) => {
+          const color = l.color ?? CHART_PALETTE[index % CHART_PALETTE.length];
+          return (
+            <Line
+              key={l.key}
+              type="monotone"
+              dataKey={l.key}
+              name={l.label ?? l.key}
+              stroke={color}
+              strokeWidth={2}
+              dot={(props) => {
+                const isSelected = selectedYear !== null && props.payload[xKey] === selectedYear;
+                return (
+                  <circle
+                    cx={props.cx}
+                    cy={props.cy}
+                    r={isSelected ? 6 : 0}
+                    fill={color}
+                    stroke="#fff"
+                    strokeWidth={2}
+                    className="transition-all duration-300"
+                    style={{
+                      filter: isSelected ? "drop-shadow(0 0 4px rgba(0,0,0,0.3))" : "none",
+                    }}
+                  />
+                );
+              }}
+              activeDot={{
+                r: 5,
+                fill: color,
+                stroke: "#fff",
+                strokeWidth: 2,
+              }}
+            />
+          );
+        })}
       </RechartsLineChart>
     </ResponsiveContainer>
   );

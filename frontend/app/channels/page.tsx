@@ -26,6 +26,11 @@ export default function ChannelsPage() {
   const [category, setCategory] = useState<string | null>("All");
   const [tier, setTier] = useState<string | null>("All");
 
+  // Insight state
+  const [insight, setInsight] = useState<string>("");
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState<string>("");
+
   // Debounced fetch
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -43,9 +48,78 @@ export default function ChannelsPage() {
     return () => clearTimeout(timer);
   }, [category, tier]);
 
+  const resetInsight = () => {
+    setInsight("");
+    setInsightError("");
+  };
+
+  const setCategoryFilter = (value: string | null) => {
+    setCategory(value);
+    resetInsight();
+  };
+
+  const setTierFilter = (value: string | null) => {
+    setTier(value);
+    resetInsight();
+  };
+
+  const calculateSummary = (data: ChannelsData) => {
+    const avgViewsByCategory: Record<string, number> = {};
+    data.c1_box.forEach((item) => {
+      const avg = item.values.reduce((a, b) => a + b, 0) / item.values.length;
+      avgViewsByCategory[item.category] = avg;
+    });
+
+    const tierDistribution: Record<string, number> = {};
+    data.c2_scatter.forEach((ch) => {
+      const subs = ch.subscriber_count;
+      let tier = "Micro";
+      if (subs >= 10000000) tier = "Mega";
+      else if (subs >= 1000000) tier = "Large";
+      else if (subs >= 100000) tier = "Mid";
+      tierDistribution[tier] = (tierDistribution[tier] || 0) + 1;
+    });
+
+    return {
+      total_channels: data.c2_scatter.length,
+      avg_views_by_category: avgViewsByCategory,
+      subscriber_tier_distribution: tierDistribution,
+    };
+  };
+
+  const handleGetInsight = async () => {
+    if (!data) return;
+
+    setInsightLoading(true);
+    setInsightError("");
+
+    try {
+      const summary = calculateSummary(data);
+      const filters = {
+        category: category === "All" ? null : category,
+        tier: tier === "All" ? null : tier,
+      };
+
+      const response = await api.generateInsight({
+        page: "channels",
+        filters,
+        summary,
+      });
+
+      setInsight(response.insight);
+    } catch (error) {
+      setInsightError(
+        error instanceof Error ? error.message : "Không thể tạo insight. Vui lòng thử lại."
+      );
+    } finally {
+      setInsightLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setCategory("All");
     setTier("All");
+    resetInsight();
   };
 
   return (
@@ -53,7 +127,7 @@ export default function ChannelsPage() {
       <FilterBar onReset={handleReset}>
         <div className="flex items-center gap-2">
           <label className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</label>
-          <Select value={category} onValueChange={setCategory}>
+          <Select value={category} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -70,7 +144,7 @@ export default function ChannelsPage() {
 
         <div className="flex items-center gap-2">
           <label className={`text-sm ${TEXT_COLORS.slate}`}>Nhóm người đăng ký:</label>
-          <Select value={tier} onValueChange={setTier}>
+          <Select value={tier} onValueChange={setTierFilter}>
             <SelectTrigger className="w-56">
               <SelectValue />
             </SelectTrigger>
@@ -153,7 +227,10 @@ export default function ChannelsPage() {
             </div>
 
             <InsightCard
-              content="Thiếu nhi có trung vị lượt xem thấp nhưng điểm ngoại lệ cực cao — vài video lan truyền kéo cả kênh. Nhóm siêu lớn không phải luôn đứng đầu lượt xem trung bình."
+              content={insight}
+              loading={insightLoading}
+              error={insightError}
+              onGetInsight={handleGetInsight}
             />
           </>
         )}

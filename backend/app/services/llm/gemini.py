@@ -39,7 +39,7 @@ def _parse_response(text: str) -> dict[str, str]:
 
 
 class GeminiClient(LLMClient):
-    def __init__(self, api_key: str = "", model_name: str = "gemini-2.5-flash") -> None:
+    def __init__(self, api_key: str = "", model_name: str = "gemini-3.1-flash-lite-preview") -> None:
         self.api_key = api_key
         self.model_name = model_name
         self._configured = False
@@ -79,3 +79,49 @@ class GeminiClient(LLMClient):
             }
         text = getattr(response, "text", "") or ""
         return _parse_response(text)
+
+    async def generate_stream(
+        self,
+        prompt: str,
+        data_context: dict[str, Any] | None,
+        history: list[dict] | None = None,
+    ):
+        """
+        Stream AI-generated code using Gemini's streaming API.
+        Yields SSE-formatted JSON chunks: {"code": "...", "explanation": "..."}
+        """
+        self._ensure_configured()
+        assert self._model is not None
+
+        if data_context:
+            video_text, channel_text = schema_dict_to_text(data_context)
+        else:
+            video_text, channel_text = ("# videos: <chưa có schema>", "# channels: <chưa có schema>")
+        system_prompt = build_system_prompt(video_text, channel_text)
+        full_prompt = f"{system_prompt}\n\n## YÊU CẦU TỪ NGƯỜI DÙNG:\n{prompt}"
+
+        try:
+            # Use Gemini's streaming API
+            response = await self._model.generate_content_async(
+                full_prompt,
+                stream=True,
+            )
+
+            accumulated_text = ""
+            async for chunk in response:
+                chunk_text = getattr(chunk, "text", "") or ""
+                if chunk_text:
+                    accumulated_text += chunk_text
+                    # Try to parse accumulated text
+                    parsed = _parse_response(accumulated_text)
+                    # Yield JSON-encoded chunk
+                    yield json.dumps(parsed, ensure_ascii=False)
+
+        except Exception as e:
+            # Yield error as JSON
+            error_response = {
+                "code": "",
+                "explanation": f"Lỗi gọi Gemini API: {type(e).__name__}: {str(e)[:300]}",
+            }
+            yield json.dumps(error_response, ensure_ascii=False)
+

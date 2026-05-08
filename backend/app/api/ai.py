@@ -10,7 +10,7 @@ from app.services.llm.gemini import GeminiClient
 from app.services.logger import insert_request
 
 router = APIRouter()
-_llm = GeminiClient(api_key=settings.GEMINI_API_KEY)
+_llm = GeminiClient(api_key=settings.GEMINI_API_KEY, model_name=settings.GEMINI_MODEL)
 
 
 @router.post("/generate", response_model=GenerateResponse)

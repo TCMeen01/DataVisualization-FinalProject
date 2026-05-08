@@ -115,6 +115,7 @@ export function ResultPanel({
           {figures.map((src, i) => (
             <Card key={i}>
               <CardContent className="pt-6">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={src}
                   alt={`Hình ${i + 1}`}

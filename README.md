@@ -11,7 +11,9 @@ Trước khi bắt đầu, đảm bảo bạn đã cài đặt:
 - **conda** (Miniconda hoặc Anaconda) — để quản lý Python environment
 - **Node.js 18+** và **pnpm** — cho frontend
 - **CSV files** — đặt `videos_processed.csv` và `channels_processed.csv` vào `backend/data/`
-- **.env file** — tạo file `.env` ở thư mục gốc với `GEMINI_API_KEY=your_key_here`
+- **.env file** — tạo file `.env` ở thư mục gốc với:
+  - `GEMINI_API_KEY=your_key_here` (bắt buộc)
+  - `NEXT_PUBLIC_ENABLE_STREAMING=true` (tùy chọn, mặc định: true) — bật/tắt streaming response từ AI
 
 ## Setup
 

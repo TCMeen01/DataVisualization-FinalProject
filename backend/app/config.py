@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     )
 
     GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-3.1-flash-lite-preview"
     SANDBOX_DIR: Path = Path("./sandbox")
     DB_PATH: Path = Path("./logs.db")
     FRONTEND_URL: str = "http://localhost:3000"

@@ -19,6 +19,11 @@ export default function EconomyPage() {
   const [yearFrom, setYearFrom] = useState<string>("2024-01");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
+  // Insight state
+  const [insight, setInsight] = useState<string>("");
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState<string>("");
+
   // Debounced fetch
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -36,15 +41,71 @@ export default function EconomyPage() {
     return () => clearTimeout(timer);
   }, [yearFrom, selectedCategories]);
 
+  const resetInsight = () => {
+    setInsight("");
+    setInsightError("");
+  };
+
+  const setYearFromFilter = (value: string) => {
+    setYearFrom(value);
+    resetInsight();
+  };
+
+  const calculateSummary = (data: EconomyData) => {
+    const commercialCount = data.f1_line.reduce((sum, item) => sum + item.count, 0);
+
+    const topChannels = data.top_commercial_channels.slice(0, 3).map((ch) => ({
+      name: ch.channel_name,
+      count: ch.commercial_count,
+    }));
+
+    return {
+      commercial_video_count: commercialCount,
+      top_commercial_channels: topChannels,
+      year_from: yearFrom,
+    };
+  };
+
+  const handleGetInsight = async () => {
+    if (!data) return;
+
+    setInsightLoading(true);
+    setInsightError("");
+
+    try {
+      const summary = calculateSummary(data);
+      const filters = {
+        year_from: yearFrom,
+        categories: selectedCategories.length > 0 ? selectedCategories : null,
+      };
+
+      const response = await api.generateInsight({
+        page: "economy",
+        filters,
+        summary,
+      });
+
+      setInsight(response.insight);
+    } catch (error) {
+      setInsightError(
+        error instanceof Error ? error.message : "Không thể tạo insight. Vui lòng thử lại."
+      );
+    } finally {
+      setInsightLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setYearFrom("2024-01");
     setSelectedCategories([]);
+    resetInsight();
   };
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     );
+    resetInsight();
   };
 
   return (
@@ -55,7 +116,7 @@ export default function EconomyPage() {
           <input
             type="month"
             value={yearFrom}
-            onChange={(e) => setYearFrom(e.target.value)}
+            onChange={(e) => setYearFromFilter(e.target.value)}
             className={`px-2 py-1 text-sm ${BORDER_COLORS.hairline} rounded ${BG_COLORS.canvas} ${TEXT_COLORS.ink}`}
             min="2015-01"
             max="2026-05"
@@ -162,7 +223,10 @@ export default function EconomyPage() {
             </div>
 
             <InsightCard
-              content="YouTube Shopping ra mắt 10/2024 — số video thương mại tăng rõ rệt. Tỉ lệ tương tác của video thương mại khác biệt so với nội dung thuần."
+              content={insight}
+              loading={insightLoading}
+              error={insightError}
+              onGetInsight={handleGetInsight}
             />
           </>
         )}

@@ -25,10 +25,10 @@ dev:
 	@$(MAKE) -j2 backend frontend
 
 backend:
-	cd backend && uvicorn app.main:app --reload
+	conda run -n vn-dataviz-ai uvicorn app.main:app --reload --app-dir backend
 
 frontend:
-	cd frontend && pnpm dev
+	pnpm --dir frontend dev
 
 lint:
 	cd frontend && pnpm lint

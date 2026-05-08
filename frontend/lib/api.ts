@@ -50,14 +50,21 @@ export type KPI = {
   short_form_ratio: number;
 };
 
+export type OverviewMetricRow = {
+  video_count: number;
+  total_views: number;
+  total_channels: number;
+  short_form_ratio: number;
+};
+
 export type OverviewData = {
   kpis: KPI;
   /** Pie chart: category distribution — key from backend */
-  a1_category_pie: { channel_category: string; video_count: number }[];
+  a1_category_pie: ({ channel_category: string } & OverviewMetricRow)[];
   /** Line chart: total views by year — key from backend */
-  a2_views_by_year: { year: number; total_views: number }[];
+  a2_views_by_year: ({ channel_category: string; year: number } & OverviewMetricRow)[];
   /** Stacked area: short vs long ratio by year — key from backend */
-  a3_short_long_ratio: { year: number; short_count: number; long_count: number; short_ratio: number }[];
+  a3_short_long_ratio: ({ channel_category: string; year: number; short_count: number; long_count: number; short_ratio: number } & OverviewMetricRow)[];
 };
 
 export type ShortFormData = {
@@ -175,6 +182,18 @@ export type SavedChart = {
   request_id: string | null;
 };
 
+// ── Insight types ─────────────────────────────────────────────────────────────
+
+export type InsightRequest = {
+  page: string;
+  filters: Record<string, unknown>;
+  summary: Record<string, unknown>;
+};
+
+export type InsightResponse = {
+  insight: string;
+};
+
 // ── API client ────────────────────────────────────────────────────────────────
 
 export const api = {
@@ -273,5 +292,12 @@ export const api = {
       if (!res.ok) {
         throw new Error(`API /api/gallery/${id} -> ${res.status} ${res.statusText}`);
       }
+    }),
+
+  // ── Insights ───────────────────────────────────────────────────────────────
+  generateInsight: (body: InsightRequest) =>
+    request<InsightResponse>("/api/insights", {
+      method: "POST",
+      body: JSON.stringify(body),
     }),
 };
