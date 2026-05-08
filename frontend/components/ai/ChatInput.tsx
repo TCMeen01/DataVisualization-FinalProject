@@ -51,7 +51,7 @@ export function ChatInput({ onSubmit, isLoading }: ChatInputProps) {
         )}
       </Button>
       <p className="text-xs text-zinc-500">
-        Tip: Nhấn Ctrl+Enter để submit nhanh
+        Mẹo: Nhấn Ctrl+Enter để gửi nhanh
       </p>
     </div>
   );

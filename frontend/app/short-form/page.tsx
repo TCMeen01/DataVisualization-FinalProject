@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, CHART_PALETTE } from "@/lib/constants";
+import { CATEGORIES, CHART_PALETTE, labelCategory } from "@/lib/constants";
+import { TEXT_COLORS } from "@/lib/design-tokens";
 
 export default function ShortFormPage() {
   const [data, setData] = useState<ShortFormData | null>(null);
@@ -53,7 +54,7 @@ export default function ShortFormPage() {
     <div className="flex flex-col h-full">
       <FilterBar onReset={handleReset}>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[#75758a] whitespace-nowrap">Năm:</label>
+          <label className={`text-sm ${TEXT_COLORS.slate} whitespace-nowrap`}>Năm:</label>
           <div className="w-48">
             <Slider
               value={yearRange}
@@ -63,13 +64,13 @@ export default function ShortFormPage() {
               step={1}
             />
           </div>
-          <span className="text-xs text-[#93939f] tabular-nums">
+          <span className={`text-xs ${TEXT_COLORS.muted} tabular-nums`}>
             {yearRange[0]} – {yearRange[1]}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[#75758a]">Danh mục:</label>
+          <label className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -78,7 +79,7 @@ export default function ShortFormPage() {
               <SelectItem value="All">Tất cả</SelectItem>
               {CATEGORIES.map((cat) => (
                 <SelectItem key={cat} value={cat}>
-                  {cat}
+                  {labelCategory(cat)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -88,25 +89,25 @@ export default function ShortFormPage() {
 
       <div className="flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">RO1</p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#212121]">
-            Xu Hướng Short-form
+          <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO1</p>
+          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>
+            Xu hướng video ngắn
           </h1>
-          <p className="mt-3 max-w-2xl text-[#75758a]">
-            Phân tích tỉ lệ short-form theo kênh và thời gian.
+          <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
+            Phân tích tỉ lệ video ngắn theo kênh và thời gian.
           </p>
         </header>
 
         {loading ? (
-          <p className="text-[#93939f]">Đang tải dữ liệu...</p>
+          <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p>
         ) : !data ? (
-          <p className="text-[#93939f]">Không thể tải dữ liệu. Kiểm tra backend.</p>
+          <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p>
         ) : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
               <ChartCard
-                title="B1: Tỉ lệ short-form theo kênh × năm"
-                description="Heatmap: màu đậm = tỉ lệ cao"
+                title="B1: Tỉ lệ video ngắn theo kênh × năm"
+                description="Bản đồ nhiệt: màu đậm = tỉ lệ cao"
               >
                 <HeatmapPlotly
                   z={data.b1_heatmap.z}
@@ -120,22 +121,22 @@ export default function ShortFormPage() {
               </ChartCard>
 
               <ChartCard
-                title="B2: Số lượng video short vs long theo năm"
-                description="Stacked bar chart"
+                title="B2: Số lượng video ngắn và video dài theo năm"
+                description="Biểu đồ cột chồng"
               >
                 <StackedBarChart
                   data={data.b2_bar}
                   xKey="label"
                   bars={[
-                    { key: "short", label: "Short-form", color: CHART_PALETTE[4] },
-                    { key: "long", label: "Long-form", color: CHART_PALETTE[5] },
+                    { key: "short", label: "Video ngắn", color: CHART_PALETTE[4] },
+                    { key: "long", label: "Video dài", color: CHART_PALETTE[5] },
                   ]}
                 />
               </ChartCard>
             </div>
 
             <InsightCard
-              content="Comedy có tỉ lệ short-form cao nhất (62.8%), Vlog thấp nhất (13.4%). Vài kênh xoay trục từ ~0% → ~90% chỉ trong 2 năm."
+              content="Hài có tỉ lệ video ngắn cao nhất (62.8%), Nhật ký đời sống thấp nhất (13.4%). Vài kênh xoay trục từ ~0% → ~90% chỉ trong 2 năm."
             />
           </>
         )}

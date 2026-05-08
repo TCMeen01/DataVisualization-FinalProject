@@ -17,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, CATEGORY_COLORS, CHART_PALETTE } from "@/lib/constants";
+import { CATEGORIES, CATEGORY_COLORS, CHART_PALETTE, labelCategory } from "@/lib/constants";
+import { TEXT_COLORS } from "@/lib/design-tokens";
 
 export default function ChannelsPage() {
   const [data, setData] = useState<ChannelsData | null>(null);
@@ -51,7 +52,7 @@ export default function ChannelsPage() {
     <div className="flex flex-col h-full">
       <FilterBar onReset={handleReset}>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[#75758a]">Danh mục:</label>
+          <label className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -60,7 +61,7 @@ export default function ChannelsPage() {
               <SelectItem value="All">Tất cả</SelectItem>
               {CATEGORIES.map((cat) => (
                 <SelectItem key={cat} value={cat}>
-                  {cat}
+                  {labelCategory(cat)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -68,17 +69,17 @@ export default function ChannelsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[#75758a]">Subscriber tier:</label>
+          <label className={`text-sm ${TEXT_COLORS.slate}`}>Nhóm người đăng ký:</label>
           <Select value={tier} onValueChange={setTier}>
             <SelectTrigger className="w-56">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">Tất cả</SelectItem>
-              <SelectItem value="Micro">Micro (&lt;100K)</SelectItem>
-              <SelectItem value="Mid">Mid (100K–1M)</SelectItem>
-              <SelectItem value="Large">Large (1M–10M)</SelectItem>
-              <SelectItem value="Mega">Mega (&gt;10M)</SelectItem>
+              <SelectItem value="Micro">Siêu nhỏ (&lt;100N)</SelectItem>
+              <SelectItem value="Mid">Trung bình (100N–1Tr)</SelectItem>
+              <SelectItem value="Large">Lớn (1Tr–10Tr)</SelectItem>
+              <SelectItem value="Mega">Siêu lớn (&gt;10Tr)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -86,29 +87,29 @@ export default function ChannelsPage() {
 
       <div className="flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">RO2</p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#212121]">
-            Tăng Trưởng Kênh
+          <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO2</p>
+          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>
+            Tăng trưởng kênh
           </h1>
-          <p className="mt-3 max-w-2xl text-[#75758a]">
-            Phân tích lượt xem trung bình và subscriber theo danh mục kênh.
+          <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
+            Phân tích lượt xem trung bình và người đăng ký theo danh mục kênh.
           </p>
         </header>
 
         {loading ? (
-          <p className="text-[#93939f]">Đang tải dữ liệu...</p>
+          <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p>
         ) : !data ? (
-          <p className="text-[#93939f]">Không thể tải dữ liệu. Kiểm tra backend.</p>
+          <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p>
         ) : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
               <ChartCard
                 title="C1: Phân bố lượt xem/video theo danh mục"
-                description="Box plot với median và outliers"
+                description="Biểu đồ hộp với trung vị và điểm ngoại lệ"
               >
                 <BoxPlotly
                   traces={data.c1_box.map((item) => ({
-                    name: item.category,
+                    name: labelCategory(item.category),
                     y: item.values,
                     color: CATEGORY_COLORS[item.category],
                   }))}
@@ -118,19 +119,19 @@ export default function ChannelsPage() {
               </ChartCard>
 
               <ChartCard
-                title="C2: Lượt đăng ký vs Lượt xem trung bình"
-                description="Scatter plot"
+                title="C2: Người đăng ký và lượt xem trung bình"
+                description="Biểu đồ phân tán"
               >
                 <ScatterPlotly
                   traces={data.c2_scatter.reduce((acc, point) => {
-                    const existing = acc.find((t) => t.name === point.category);
+                    const existing = acc.find((t) => t.name === labelCategory(point.category));
                     if (existing) {
                       existing.x.push(point.subscriber_count);
                       existing.y.push(point.avg_views);
                       existing.text?.push(point.channel_name);
                     } else {
                       acc.push({
-                        name: point.category,
+                        name: labelCategory(point.category),
                         x: [point.subscriber_count],
                         y: [point.avg_views],
                         text: [point.channel_name],
@@ -144,15 +145,15 @@ export default function ChannelsPage() {
                     return acc;
                   }, [] as { name: string; x: number[]; y: number[]; text: string[]; marker: { size: number; color: string; opacity: number } }[])}
                   xAxisType="log"
-                  xLabel="Subscriber count (log scale)"
-                  yLabel="Avg views per video"
+                  xLabel="Số người đăng ký (thang log)"
+                  yLabel="Lượt xem trung bình mỗi video"
                   height={340}
                 />
               </ChartCard>
             </div>
 
             <InsightCard
-              content="Kids có median view thấp nhưng outlier cực cao — vài video viral kéo cả kênh. Mega không phải luôn đứng đầu avg view."
+              content="Thiếu nhi có trung vị lượt xem thấp nhưng điểm ngoại lệ cực cao — vài video lan truyền kéo cả kênh. Nhóm siêu lớn không phải luôn đứng đầu lượt xem trung bình."
             />
           </>
         )}

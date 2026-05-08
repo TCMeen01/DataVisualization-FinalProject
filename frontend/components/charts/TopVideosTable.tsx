@@ -25,9 +25,9 @@ export function TopVideosTable({ data }: TopVideosTableProps) {
         <thead>
           <tr className="border-b border-[#d9d9dd]">
             <th className="text-left py-2 px-3 text-[#93939f] font-medium w-8">#</th>
-            <th className="text-left py-2 px-3 text-[#93939f] font-medium">Title</th>
-            <th className="text-left py-2 px-3 text-[#93939f] font-medium hidden md:table-cell">Channel</th>
-            <th className="text-right py-2 px-3 text-[#93939f] font-medium">Views</th>
+            <th className="text-left py-2 px-3 text-[#93939f] font-medium">Tiêu đề</th>
+            <th className="text-left py-2 px-3 text-[#93939f] font-medium hidden md:table-cell">Kênh</th>
+            <th className="text-right py-2 px-3 text-[#93939f] font-medium">Lượt xem</th>
           </tr>
         </thead>
         <tbody>
@@ -62,7 +62,7 @@ export function TopVideosTable({ data }: TopVideosTableProps) {
                   <span>{formatNumber(row.view_count)}</span>
                   {row.is_viral && (
                     <span className="text-[10px] font-medium px-1.5 py-0.5 bg-[#008162]/10 text-[#008162] rounded-full">
-                      Viral
+                      Lan truyền
                     </span>
                   )}
                 </div>

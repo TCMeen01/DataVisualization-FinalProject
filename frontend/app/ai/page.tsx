@@ -129,14 +129,13 @@ export default function AIWorkspacePage() {
       {/* Header */}
       <header className="border-b bg-white px-10 py-8 dark:bg-zinc-950">
         <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-          AI Workspace
+          Không gian AI
         </p>
         <h1 className="mt-2 text-4xl font-semibold tracking-tight">
-          Phân tích bằng natural language
+          Phân tích bằng ngôn ngữ tự nhiên
         </h1>
         <p className="mt-3 max-w-2xl text-zinc-600 dark:text-zinc-400">
-          Human-in-the-loop: AI sinh code, bạn review/edit/approve, backend chạy
-          local.
+          AI sinh mã, bạn xem lại, chỉnh sửa, duyệt, rồi hệ thống chạy cục bộ.
         </p>
       </header>
 
@@ -172,7 +171,7 @@ export default function AIWorkspacePage() {
         <div className="bg-[#17171c] p-10">
           <Card className="border-zinc-800 bg-zinc-900">
             <CardHeader>
-              <CardTitle className="text-zinc-100">2. Code</CardTitle>
+              <CardTitle className="text-zinc-100">2. Mã Python</CardTitle>
             </CardHeader>
             <CardContent>
               {request ? (
@@ -190,14 +189,14 @@ export default function AIWorkspacePage() {
                         disabled={request.status === "executing"}
                         className="flex-1"
                       >
-                        Approve & Run
+                        Duyệt và chạy
                       </Button>
                       <Button
                         onClick={handleReject}
                         variant="outline"
                         disabled={request.status === "executing"}
                       >
-                        Reject
+                        Từ chối
                       </Button>
                     </div>
                   )}

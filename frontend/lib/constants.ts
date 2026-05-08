@@ -4,29 +4,29 @@
  */
 
 // ── Chart color palette ──────────────────────────────────────────────────────
-// Single concrete theme for all charts.
+// Cohere design system palette (DESIGN.md) — deep-green to warm accent progression
 export const CHART_PALETTE = [
-  "#003d5c",
-  "#00546e",
-  "#006b71",
-  "#008162",
-  "#009446",
-  "#65a31c",
-  "#b1aa00",
-  "#ffa600",
+  "#003c33", // deep-green (primary)
+  "#1863dc", // action-blue
+  "#4c6ee6", // focus-blue
+  "#9b60aa", // form-focus (purple)
+  "#ff7759", // coral
+  "#ffad9b", // coral-soft
+  "#65a31c", // olive-green
+  "#ffa600", // warm-orange
 ] as const;
 
 // ── Category palette ────────────────────────────────────────────────────────
 // Colours chosen to read on both white canvas (#fff) and deep-green (#003c33)
 export const CATEGORY_COLORS: Record<string, string> = {
-  Kids:      "#003d5c",
-  Gaming:    "#00546e",
-  Music:     "#006b71",
-  Comedy:    "#008162",
-  Vlog:      "#009446",
-  News:      "#65a31c",
-  Education: "#b1aa00",
-  Sports:    "#ffa600",
+  Kids:      "#003c33", // deep-green
+  Gaming:    "#1863dc", // action-blue
+  Music:     "#4c6ee6", // focus-blue
+  Comedy:    "#9b60aa", // form-focus
+  Vlog:      "#ff7759", // coral
+  News:      "#ffad9b", // coral-soft
+  Education: "#65a31c", // olive-green
+  Sports:    "#ffa600", // warm-orange
 };
 
 // ── Label arrays ─────────────────────────────────────────────────────────────
@@ -41,22 +41,51 @@ export const CATEGORIES = [
   "Sports",
 ] as const;
 
+export const CATEGORY_LABELS: Record<string, string> = {
+  Kids: "Thiếu nhi",
+  Gaming: "Trò chơi",
+  Music: "Âm nhạc",
+  Comedy: "Hài",
+  Vlog: "Nhật ký đời sống",
+  News: "Tin tức",
+  Education: "Giáo dục",
+  Sports: "Thể thao",
+};
+
 export const SUBSCRIBER_TIERS = ["Mega", "Large", "Mid"] as const;
 
-export const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+export const SUBSCRIBER_TIER_LABELS: Record<string, string> = {
+  Micro: "Siêu nhỏ",
+  Mid: "Trung bình",
+  Large: "Lớn",
+  Mega: "Siêu lớn",
+};
+
+export const DURATION_LABELS: Record<string, string> = {
+  Short: "Ngắn",
+  Medium: "Trung bình",
+  Long: "Dài",
+};
+
+export const DAY_LABELS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"] as const;
+
+export function labelCategory(category: string): string {
+  return CATEGORY_LABELS[category] ?? category;
+}
+
+export function labelSubscriberTier(tier: string): string {
+  return SUBSCRIBER_TIER_LABELS[tier] ?? tier;
+}
+
+export function labelDuration(duration: string): string {
+  return DURATION_LABELS[duration] ?? duration;
+}
 
 // ── Number formatters ────────────────────────────────────────────────────────
-/**
- * Format a raw number into human-readable notation.
- * formatNumber(1_234_567_890) → "1.2B"
- * formatNumber(456_000)       → "456K"
- * formatNumber(1_234)         → "1.2K"
- * formatNumber(999)           → "999"
- */
 export function formatNumber(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
-  if (n >= 1_000_000)     return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000)         return `${(n / 1_000).toFixed(1)}K`;
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}Tỷ`;
+  if (n >= 1_000_000)     return `${(n / 1_000_000).toFixed(1)}Tr`;
+  if (n >= 1_000)         return `${(n / 1_000).toFixed(1)}N`;
   return String(Math.round(n));
 }
 

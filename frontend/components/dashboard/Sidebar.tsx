@@ -19,15 +19,15 @@ import {
 } from "lucide-react";
 
 const items = [
-  { href: "/",            label: "Tổng Quan",             icon: LayoutDashboard },
-  { href: "/short-form",  label: "Xu Hướng Short-form",   icon: TrendingUp },
-  { href: "/channels",    label: "Tăng Trưởng Kênh",      icon: Users },
-  { href: "/anomaly",     label: "Bất Thường & Viral",     icon: AlertTriangle },
-  { href: "/interaction", label: "Nghịch Lý Tương Tác",   icon: Heart },
-  { href: "/economy",     label: "Creator Economy",        icon: ShoppingCart },
-  { href: "/ai",          label: "AI Workspace",           icon: Sparkles },
-  { href: "/gallery",     label: "Gallery",                icon: Images },
-  { href: "/logs",        label: "Audit Log",              icon: ScrollText },
+  { href: "/",            label: "Tổng quan",             icon: LayoutDashboard },
+  { href: "/short-form",  label: "Xu hướng video ngắn",    icon: TrendingUp },
+  { href: "/channels",    label: "Tăng trưởng kênh",       icon: Users },
+  { href: "/anomaly",     label: "Bất thường & lan truyền", icon: AlertTriangle },
+  { href: "/interaction", label: "Nghịch lý tương tác",    icon: Heart },
+  { href: "/economy",     label: "Kinh tế nhà sáng tạo",   icon: ShoppingCart },
+  { href: "/ai",          label: "Không gian AI",          icon: Sparkles },
+  { href: "/gallery",     label: "Bộ sưu tập",             icon: Images },
+  { href: "/logs",        label: "Nhật ký kiểm duyệt",     icon: ScrollText },
 ];
 
 export function Sidebar() {
@@ -44,13 +44,13 @@ export function Sidebar() {
           className="text-[10px] uppercase tracking-[0.2em] font-medium"
           style={{ color: "#93939f", fontFamily: "var(--font-mono, monospace)", letterSpacing: "0.28px" }}
         >
-          Viet Nam • YouTube
+          Việt Nam • YouTube
         </p>
         <h2
           className="mt-1 text-lg font-semibold text-white leading-tight"
           style={{ fontFamily: "var(--font-display, 'Space Grotesk', Inter, sans-serif)" }}
         >
-          Analytics
+          Phân tích dữ liệu
         </h2>
       </div>
 

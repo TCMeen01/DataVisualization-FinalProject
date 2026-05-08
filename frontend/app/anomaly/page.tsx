@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { CHART_PALETTE } from "@/lib/constants";
+import { COLORS, TEXT_COLORS } from "@/lib/design-tokens";
 
 export default function AnomalyPage() {
   const [data, setData] = useState<AnomalyData | null>(null);
@@ -65,7 +66,7 @@ export default function AnomalyPage() {
     <div className="flex flex-col h-full">
       <FilterBar onReset={handleReset}>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[#75758a]">Kênh:</label>
+          <label className={`text-sm ${TEXT_COLORS.slate}`}>Kênh:</label>
           <Select value={channelId} onValueChange={setChannelId}>
             <SelectTrigger className="w-48">
               <SelectValue />
@@ -82,7 +83,7 @@ export default function AnomalyPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[#75758a] whitespace-nowrap">Năm:</label>
+          <label className={`text-sm ${TEXT_COLORS.slate} whitespace-nowrap`}>Năm:</label>
           <div className="w-48">
             <Slider
               value={yearRange}
@@ -92,7 +93,7 @@ export default function AnomalyPage() {
               step={1}
             />
           </div>
-          <span className="text-xs text-[#93939f] tabular-nums">
+          <span className={`text-xs ${TEXT_COLORS.muted} tabular-nums`}>
             {yearRange[0]} – {yearRange[1]}
           </span>
         </div>
@@ -100,24 +101,24 @@ export default function AnomalyPage() {
 
       <div className="flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">RO3</p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#212121]">
+          <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO3</p>
+          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>
             Bất Thường & Viral
           </h1>
-          <p className="mt-3 max-w-2xl text-[#75758a]">
+          <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
             Phát hiện video có dấu hiệu bất thường và phân tích video viral.
           </p>
         </header>
 
         {loading ? (
-          <p className="text-[#93939f]">Đang tải dữ liệu...</p>
+          <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p>
         ) : !data ? (
-          <p className="text-[#93939f]">Không thể tải dữ liệu. Kiểm tra backend.</p>
+          <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p>
         ) : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
               <ChartCard
-                title="D1: View count vs Like/View ratio"
+                title="D1: Lượt xem và tỉ lệ thích/lượt xem"
                 description="Màu đỏ/cam = nghi ngờ fake view"
               >
                 <ScatterPlotly
@@ -134,18 +135,18 @@ export default function AnomalyPage() {
                       x: data.d1_scatter.filter((p) => p.suspect_fake_view).map((p) => p.view_count),
                       y: data.d1_scatter.filter((p) => p.suspect_fake_view).map((p) => p.like_view_ratio),
                       text: data.d1_scatter.filter((p) => p.suspect_fake_view).map((p) => p.title),
-                      marker: { size: 5, color: "#FF0000", opacity: 0.75 },
+                      marker: { size: 5, color: COLORS.error, opacity: 0.75 },
                     },
                   ]}
                   xAxisType="log"
-                  xLabel="View count (log scale)"
-                  yLabel="Like/View ratio"
+                  xLabel="Lượt xem (thang log)"
+                  yLabel="Tỉ lệ thích/lượt xem"
                   height={340}
                 />
               </ChartCard>
 
               <ChartCard
-                title="D2: Top 15 video viral"
+                title="D2: Top 15 video lan truyền"
                 description="Sắp xếp theo lượt xem giảm dần"
               >
                 <TopVideosTable data={data.d2_viral} />
@@ -153,7 +154,7 @@ export default function AnomalyPage() {
             </div>
 
             <InsightCard
-              content="Top viral: FLife TV 620M views. Music & Kids chiếm áp đảo viral count (123 + 138). Một số video view rất cao nhưng like_view_ratio bất thường thấp."
+              content="Lan truyền mạnh nhất: FLife TV đạt 620Tr lượt xem. Âm nhạc và Thiếu nhi chiếm áp đảo số video lan truyền (123 + 138). Một số video có lượt xem rất cao nhưng tỉ lệ thích/lượt xem thấp bất thường."
             />
           </>
         )}

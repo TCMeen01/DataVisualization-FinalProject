@@ -1,3 +1,5 @@
+import asyncio
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,6 +9,10 @@ from app.api import ai, data, execute, gallery, logs
 from app.config import settings
 from app.services import data_store
 from app.services.logger import init_db
+
+# Fix for Windows: asyncio subprocess requires ProactorEventLoop
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 
 @asynccontextmanager

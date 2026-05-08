@@ -28,7 +28,7 @@ export function FilterBar({ children, onReset }: FilterBarProps) {
             cursor: "pointer",
           }}
         >
-          Reset
+          Đặt lại
         </button>
       )}
     </div>

@@ -10,7 +10,8 @@ import { InsightCard } from "@/components/dashboard/InsightCard";
 import { ChartCard } from "@/components/charts/ChartCard";
 import { LineChart } from "@/components/charts/LineChart";
 import { BarChart } from "@/components/charts/BarChart";
-import { CATEGORIES, CHART_PALETTE, formatNumber } from "@/lib/constants";
+import { CATEGORIES, CHART_PALETTE, formatNumber, labelCategory } from "@/lib/constants";
+import { COLORS, TEXT_COLORS, BG_COLORS, BORDER_COLORS } from "@/lib/design-tokens";
 
 export default function EconomyPage() {
   const [data, setData] = useState<EconomyData | null>(null);
@@ -50,19 +51,19 @@ export default function EconomyPage() {
     <div className="flex flex-col h-full">
       <FilterBar onReset={handleReset}>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[#75758a]">Từ tháng:</label>
+          <label className={`text-sm ${TEXT_COLORS.slate}`}>Từ tháng:</label>
           <input
             type="month"
             value={yearFrom}
             onChange={(e) => setYearFrom(e.target.value)}
-            className="px-2 py-1 text-sm border border-[#d9d9dd] rounded bg-white text-[#212121]"
+            className={`px-2 py-1 text-sm ${BORDER_COLORS.hairline} rounded ${BG_COLORS.canvas} ${TEXT_COLORS.ink}`}
             min="2015-01"
             max="2026-05"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[#75758a]">Danh mục:</label>
+          <label className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</label>
           <div className="flex flex-wrap gap-1">
             {CATEGORIES.map((cat) => (
               <button
@@ -71,13 +72,13 @@ export default function EconomyPage() {
                 onClick={() => toggleCategory(cat)}
                 className="px-2 py-1 text-xs rounded transition-colors"
                 style={{
-                  background: selectedCategories.includes(cat) ? "#1863dc" : "#f2f2f2",
-                  color: selectedCategories.includes(cat) ? "#ffffff" : "#75758a",
+                  background: selectedCategories.includes(cat) ? COLORS.actionBlue : COLORS.cardBorder,
+                  color: selectedCategories.includes(cat) ? COLORS.canvas : COLORS.slate,
                   border: "1px solid",
-                  borderColor: selectedCategories.includes(cat) ? "#1863dc" : "#d9d9dd",
+                  borderColor: selectedCategories.includes(cat) ? COLORS.actionBlue : COLORS.hairline,
                 }}
               >
-                {cat}
+                {labelCategory(cat)}
               </button>
             ))}
           </div>
@@ -86,25 +87,25 @@ export default function EconomyPage() {
 
       <div className="flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">RO5</p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#212121]">
-            Creator Economy
+          <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO5</p>
+          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>
+            Kinh tế nhà sáng tạo
           </h1>
-          <p className="mt-3 max-w-2xl text-[#75758a]">
+          <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
             Phân tích xu hướng video thương mại và YouTube Shopping.
           </p>
         </header>
 
         {loading ? (
-          <p className="text-[#93939f]">Đang tải dữ liệu...</p>
+          <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p>
         ) : !data ? (
-          <p className="text-[#93939f]">Không thể tải dữ liệu. Kiểm tra backend.</p>
+          <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p>
         ) : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
               <ChartCard
                 title="F1: Số lượng video thương mại theo tháng"
-                description="Vertical reference line: YouTube Shopping VN (10/2024)"
+                description="Đường mốc: YouTube Shopping VN (10/2024)"
               >
                 <LineChart
                   data={data.f1_line}
@@ -117,15 +118,15 @@ export default function EconomyPage() {
               </ChartCard>
 
               <ChartCard
-                title="F2: Avg view commercial vs non-commercial"
-                description="Grouped bar chart theo danh mục"
+                title="F2: Lượt xem trung bình của video thương mại và không thương mại"
+                description="Biểu đồ cột nhóm theo danh mục"
               >
                 <BarChart
                   data={data.f2_bar}
                   xKey="category"
                   bars={[
-                    { key: "commercial", label: "Commercial", color: CHART_PALETTE[3] },
-                    { key: "non_commercial", label: "Non-commercial", color: CHART_PALETTE[2] },
+                    { key: "commercial", label: "Thương mại", color: CHART_PALETTE[3] },
+                    { key: "non_commercial", label: "Không thương mại", color: CHART_PALETTE[2] },
                   ]}
                   yFormatter={formatNumber}
                 />
@@ -138,18 +139,18 @@ export default function EconomyPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-[#d9d9dd]">
-                        <th className="text-left py-2 px-3 text-[#93939f] font-medium">#</th>
-                        <th className="text-left py-2 px-3 text-[#93939f] font-medium">Kênh</th>
-                        <th className="text-right py-2 px-3 text-[#93939f] font-medium">Số video</th>
+                      <tr className={`border-b ${BORDER_COLORS.hairline}`}>
+                        <th className={`text-left py-2 px-3 ${TEXT_COLORS.muted} font-medium`}>#</th>
+                        <th className={`text-left py-2 px-3 ${TEXT_COLORS.muted} font-medium`}>Kênh</th>
+                        <th className={`text-right py-2 px-3 ${TEXT_COLORS.muted} font-medium`}>Số video</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.top_commercial_channels.map((row, i) => (
-                        <tr key={i} className="border-b border-[#f2f2f2]">
-                          <td className="py-2 px-3 text-[#93939f]">{i + 1}</td>
-                          <td className="py-2 px-3 text-[#212121]">{row.channel_name}</td>
-                          <td className="py-2 px-3 text-right tabular-nums text-[#212121]">
+                        <tr key={i} className={`border-b ${BORDER_COLORS.cardBorder}`}>
+                          <td className={`py-2 px-3 ${TEXT_COLORS.muted}`}>{i + 1}</td>
+                          <td className={`py-2 px-3 ${TEXT_COLORS.ink}`}>{row.channel_name}</td>
+                          <td className={`py-2 px-3 text-right tabular-nums ${TEXT_COLORS.ink}`}>
                             {row.commercial_count}
                           </td>
                         </tr>
@@ -161,7 +162,7 @@ export default function EconomyPage() {
             </div>
 
             <InsightCard
-              content="YouTube Shopping ra mắt 10/2024 — số video commercial tăng rõ rệt. Engagement video commercial khác biệt so với nội dung thuần."
+              content="YouTube Shopping ra mắt 10/2024 — số video thương mại tăng rõ rệt. Tỉ lệ tương tác của video thương mại khác biệt so với nội dung thuần."
             />
           </>
         )}

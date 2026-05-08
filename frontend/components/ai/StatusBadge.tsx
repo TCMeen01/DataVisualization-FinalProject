@@ -21,7 +21,7 @@ const statusConfig: Record<
   { label: string; className: string }
 > = {
   idle: {
-    label: "Idle",
+    label: "Chưa bắt đầu",
     className: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
   },
   generating: {
@@ -29,7 +29,7 @@ const statusConfig: Record<
     className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 animate-pulse",
   },
   pending: {
-    label: "Chờ review",
+    label: "Chờ duyệt",
     className: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
   },
   edited: {
@@ -37,15 +37,15 @@ const statusConfig: Record<
     className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   },
   executing: {
-    label: "Đang chạy...",
+    label: "Đang chạy",
     className: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 animate-pulse",
   },
   completed: {
-    label: "Hoàn thành",
+    label: "Hoàn tất",
     className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
   },
   failed: {
-    label: "Lỗi",
+    label: "Thất bại",
     className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
   },
   rejected: {

@@ -12,7 +12,8 @@ import { ChartCard } from "@/components/charts/ChartCard";
 import { PieDonut } from "@/components/charts/PieDonut";
 import { LineChart } from "@/components/charts/LineChart";
 import { StackedAreaChart } from "@/components/charts/StackedAreaChart";
-import { CHART_PALETTE, formatNumber } from "@/lib/constants";
+import { CHART_PALETTE, formatNumber, labelCategory } from "@/lib/constants";
+import { TEXT_COLORS } from "@/lib/design-tokens";
 
 function OverviewContent() {
   const { selectedCategory, setSelectedCategory } = useCategoryFilter();
@@ -34,7 +35,7 @@ function OverviewContent() {
   if (loading) {
     return (
       <div className="px-10 py-12">
-        <p className="text-[#93939f]">Đang tải dữ liệu...</p>
+        <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p>
       </div>
     );
   }
@@ -42,7 +43,7 @@ function OverviewContent() {
   if (!data) {
     return (
       <div className="px-10 py-12">
-        <p className="text-[#93939f]">Không thể tải dữ liệu. Kiểm tra backend.</p>
+        <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p>
       </div>
     );
   }
@@ -50,14 +51,14 @@ function OverviewContent() {
   return (
     <div className="px-10 py-12">
       <header className="mb-8">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">Dashboard</p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#212121]">
+        <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>Bảng điều khiển</p>
+        <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>
           Tổng Quan
         </h1>
-        <p className="mt-3 max-w-3xl text-[#75758a] italic font-semibold">
+        <p className={`mt-3 max-w-3xl ${TEXT_COLORS.slate} italic font-semibold`}>
           Dữ liệu được thu thập vào ngày 05/05/2026.
         </p>
-        <p className="mt-3 max-w-3xl text-[#75758a]">
+        <p className={`mt-3 max-w-3xl ${TEXT_COLORS.slate}`}>
           Chỉ số tổng quan và phân bố theo danh mục. Click vào biểu đồ tròn để lọc theo danh mục.
         </p>
       </header>
@@ -78,7 +79,7 @@ function OverviewContent() {
         <ChartCard title="A1: Phân bố theo danh mục" description="Click để lọc">
           <PieDonut
             data={(data.a1_category_pie ?? []).map((d) => ({
-              name: d.channel_category,
+              name: labelCategory(d.channel_category),
               value: d.video_count,
             }))}
             onSliceClick={setSelectedCategory}
@@ -88,7 +89,7 @@ function OverviewContent() {
 
         <ChartCard
           title="A2: Lượt xem theo năm"
-          description={selectedCategory ? `Lọc: ${selectedCategory}` : "Tất cả danh mục"}
+          description={selectedCategory ? `Lọc: ${labelCategory(selectedCategory)}` : "Tất cả danh mục"}
         >
           <LineChart
             data={data.a2_views_by_year ?? []}
@@ -101,8 +102,8 @@ function OverviewContent() {
 
       <div className="mb-8">
         <ChartCard
-          title="A3: Tỉ lệ short-form vs long-form theo năm"
-          description={selectedCategory ? `Lọc: ${selectedCategory}` : "Tất cả danh mục"}
+          title="A3: Tỉ lệ video ngắn và video dài theo năm"
+          description={selectedCategory ? `Lọc: ${labelCategory(selectedCategory)}` : "Tất cả danh mục"}
         >
           <StackedAreaChart
             data={(data.a3_short_long_ratio ?? []).map((d) => ({
@@ -112,8 +113,8 @@ function OverviewContent() {
             }))}
             xKey="year"
             areas={[
-              { key: "short", label: "Short-form", color: CHART_PALETTE[7], stackId: "ratio" },
-              { key: "long", label: "Long-form", color: CHART_PALETTE[5], stackId: "ratio" },
+              { key: "short", label: "Video ngắn", color: CHART_PALETTE[7], stackId: "ratio" },
+              { key: "long", label: "Video dài", color: CHART_PALETTE[5], stackId: "ratio" },
             ]}
             pct
           />

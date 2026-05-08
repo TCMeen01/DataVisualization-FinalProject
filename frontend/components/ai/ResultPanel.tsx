@@ -57,16 +57,29 @@ export function ResultPanel({
     if (figures.length === 0) return;
     setSaving(true);
     try {
-      await api.saveChart({
-        title: title.trim() || prompt.slice(0, 50),
-        figure_base64: figures[0],
-        prompt,
-        request_id,
+      // Lưu tất cả charts
+      const baseTitle = title.trim() || prompt.slice(0, 50);
+      const savePromises = figures.map((figure, index) => {
+        const chartTitle = figures.length > 1
+          ? `${baseTitle} (${index + 1}/${figures.length})`
+          : baseTitle;
+        return api.saveChart({
+          title: chartTitle,
+          figure_base64: figure,
+          prompt,
+          request_id,
+        });
       });
-      toast.success("Chart đã được lưu vào Gallery!");
+
+      await Promise.all(savePromises);
+
+      const message = figures.length > 1
+        ? `Đã lưu ${figures.length} biểu đồ vào bộ sưu tập!`
+        : "Đã lưu biểu đồ vào bộ sưu tập!";
+      toast.success(message);
       setDialogOpen(false);
     } catch (error) {
-      toast.error("Lỗi khi lưu chart: " + (error as Error).message);
+      toast.error("Lỗi khi lưu biểu đồ: " + (error as Error).message);
     } finally {
       setSaving(false);
     }
@@ -76,7 +89,7 @@ export function ResultPanel({
     return (
       <Card className="border-dashed">
         <CardContent className="flex h-32 items-center justify-center text-zinc-500">
-          Chưa có kết quả. Nhấn Approve để chạy code.
+          Chưa có kết quả. Nhấn Duyệt để chạy mã.
         </CardContent>
       </Card>
     );
@@ -104,7 +117,7 @@ export function ResultPanel({
               <CardContent className="pt-6">
                 <img
                   src={src}
-                  alt={`Figure ${i + 1}`}
+                  alt={`Hình ${i + 1}`}
                   className="w-full rounded"
                 />
               </CardContent>
@@ -117,7 +130,7 @@ export function ResultPanel({
         <div className="flex justify-end">
           <Button onClick={openSaveDialog} variant="outline">
             <Save className="mr-2 h-4 w-4" />
-            Save to Gallery
+            Lưu vào bộ sưu tập
           </Button>
         </div>
       )}
@@ -126,7 +139,7 @@ export function ResultPanel({
         <Card>
           <CardContent className="pt-6">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              Output
+              Kết quả đầu ra
             </p>
             <pre className="max-h-64 overflow-auto rounded bg-zinc-900 p-3 font-mono text-xs leading-relaxed text-zinc-100">
               {stdout}
@@ -144,21 +157,22 @@ export function ResultPanel({
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Lưu chart vào Gallery</DialogTitle>
+            <DialogTitle>Lưu biểu đồ vào bộ sưu tập</DialogTitle>
             <DialogDescription>
-              Đặt tên cho chart để dễ tìm lại. Nếu bỏ trống, hệ thống sẽ tự sinh
-              từ prompt.
+              {figures.length > 1
+                ? `Sẽ lưu ${figures.length} biểu đồ. Đặt tên chung cho các biểu đồ (hệ thống sẽ tự thêm số thứ tự).`
+                : "Đặt tên cho biểu đồ để dễ tìm lại. Nếu bỏ trống, hệ thống sẽ tự sinh từ yêu cầu."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="chart-title">
-              Tên chart (tùy chọn)
+              Tên biểu đồ (tùy chọn)
             </label>
             <Input
               id="chart-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="VD: Engagement theo category"
+              placeholder="VD: Tương tác theo danh mục"
               disabled={saving}
             />
           </div>
@@ -167,7 +181,7 @@ export function ResultPanel({
               Hủy
             </DialogClose>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Đang lưu..." : "Lưu"}
+              {saving ? "Đang lưu..." : `Lưu${figures.length > 1 ? ` ${figures.length} biểu đồ` : ""}`}
             </Button>
           </DialogFooter>
         </DialogContent>

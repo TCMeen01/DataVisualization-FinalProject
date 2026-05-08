@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import shutil
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -42,7 +43,8 @@ def _capture_figures(sandbox_dir: Path) -> list[str]:
     return figures
 
 
-async def run_code(code: str, sandbox_dir: Path, timeout: int = 30) -> dict[str, Any]:
+def _run_code_sync(code: str, sandbox_dir: Path, timeout: int) -> dict[str, Any]:
+    """Sync version of run_code for Windows compatibility"""
     sandbox_dir = Path(sandbox_dir).resolve()
     sandbox_dir.mkdir(parents=True, exist_ok=True)
     _ensure_datasets(sandbox_dir)
@@ -50,20 +52,37 @@ async def run_code(code: str, sandbox_dir: Path, timeout: int = 30) -> dict[str,
     script.write_text(code, encoding="utf-8")
 
     started = time.perf_counter()
-    proc = await asyncio.create_subprocess_exec(
-        sys.executable,
-        "run.py",
-        cwd=str(sandbox_dir),
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
     try:
-        stdout_b, stderr_b = await asyncio.wait_for(
-            proc.communicate(), timeout=timeout
+        proc = subprocess.run(
+            [sys.executable, "run.py"],
+            cwd=str(sandbox_dir),
+            capture_output=True,
+            timeout=timeout,
         )
-    except asyncio.TimeoutError:
-        proc.kill()
-        await proc.wait()
+        stdout = proc.stdout.decode("utf-8", errors="replace")
+        stderr = proc.stderr.decode("utf-8", errors="replace")
+        elapsed = int((time.perf_counter() - started) * 1000)
+        figures = _capture_figures(sandbox_dir)
+        _cleanup_run_script(script)
+
+        if proc.returncode == 0:
+            return {
+                "status": "completed",
+                "stdout": stdout,
+                "stderr": stderr,
+                "figures": figures,
+                "execution_time_ms": elapsed,
+                "error_message": None,
+            }
+        return {
+            "status": "failed",
+            "stdout": stdout,
+            "stderr": stderr,
+            "figures": figures,
+            "execution_time_ms": elapsed,
+            "error_message": stderr.strip().splitlines()[-1] if stderr.strip() else "Lỗi thực thi không rõ",
+        }
+    except subprocess.TimeoutExpired:
         elapsed = int((time.perf_counter() - started) * 1000)
         figures = _capture_figures(sandbox_dir)
         _cleanup_run_script(script)
@@ -76,26 +95,7 @@ async def run_code(code: str, sandbox_dir: Path, timeout: int = 30) -> dict[str,
             "error_message": f"Vượt quá thời gian thực thi {timeout}s",
         }
 
-    stdout = stdout_b.decode("utf-8", errors="replace")
-    stderr = stderr_b.decode("utf-8", errors="replace")
-    elapsed = int((time.perf_counter() - started) * 1000)
-    figures = _capture_figures(sandbox_dir)
-    _cleanup_run_script(script)
 
-    if proc.returncode == 0:
-        return {
-            "status": "completed",
-            "stdout": stdout,
-            "stderr": stderr,
-            "figures": figures,
-            "execution_time_ms": elapsed,
-            "error_message": None,
-        }
-    return {
-        "status": "failed",
-        "stdout": stdout,
-        "stderr": stderr,
-        "figures": figures,
-        "execution_time_ms": elapsed,
-        "error_message": stderr.strip().splitlines()[-1] if stderr.strip() else "Lỗi thực thi không rõ",
-    }
+async def run_code(code: str, sandbox_dir: Path, timeout: int = 30) -> dict[str, Any]:
+    """Async wrapper around sync subprocess for Windows compatibility"""
+    return await asyncio.to_thread(_run_code_sync, code, sandbox_dir, timeout)
