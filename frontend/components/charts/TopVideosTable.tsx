@@ -2,7 +2,7 @@
  * TopVideosTable — table with inline mini-bar for Chart D2 (top viral videos).
  * Design: hairline-bordered rows, rank column, viral badge, Cohere typography.
  */
-import { formatNumber } from "@/lib/constants";
+import { CHART_PALETTE, formatNumber } from "@/lib/constants";
 
 interface VideoRow {
   rank?: number;
@@ -48,7 +48,7 @@ export function TopVideosTable({ data }: TopVideosTableProps) {
                       className="h-full rounded-full"
                       style={{
                         width: `${(row.view_count / maxViews) * 100}%`,
-                        background: row.is_viral ? "#ff7759" : "#1863dc",
+                        background: row.is_viral ? CHART_PALETTE[4] : CHART_PALETTE[6],
                       }}
                     />
                   </div>
@@ -61,7 +61,7 @@ export function TopVideosTable({ data }: TopVideosTableProps) {
                 <div className="flex flex-col items-end gap-1">
                   <span>{formatNumber(row.view_count)}</span>
                   {row.is_viral && (
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 bg-[#ff7759]/10 text-[#ff7759] rounded-full">
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 bg-[#008162]/10 text-[#008162] rounded-full">
                       Viral
                     </span>
                   )}

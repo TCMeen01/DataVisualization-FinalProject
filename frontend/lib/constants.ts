@@ -3,17 +3,30 @@
  * Shared constants and formatting helpers — Cohere design system (DESIGN.md).
  */
 
+// ── Chart color palette ──────────────────────────────────────────────────────
+// Single concrete theme for all charts.
+export const CHART_PALETTE = [
+  "#003d5c",
+  "#00546e",
+  "#006b71",
+  "#008162",
+  "#009446",
+  "#65a31c",
+  "#b1aa00",
+  "#ffa600",
+] as const;
+
 // ── Category palette ────────────────────────────────────────────────────────
 // Colours chosen to read on both white canvas (#fff) and deep-green (#003c33)
 export const CATEGORY_COLORS: Record<string, string> = {
-  Kids:      "#f59e0b", // amber
-  Gaming:    "#10b981", // emerald
-  Music:     "#8b5cf6", // violet
-  Comedy:    "#ff7759", // coral (Cohere brand accent)
-  Vlog:      "#38bdf8", // sky
-  News:      "#f43f5e", // rose
-  Education: "#84cc16", // lime
-  Sports:    "#fb923c", // orange
+  Kids:      "#003d5c",
+  Gaming:    "#00546e",
+  Music:     "#006b71",
+  Comedy:    "#008162",
+  Vlog:      "#009446",
+  News:      "#65a31c",
+  Education: "#b1aa00",
+  Sports:    "#ffa600",
 };
 
 // ── Label arrays ─────────────────────────────────────────────────────────────

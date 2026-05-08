@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES, CHART_PALETTE } from "@/lib/constants";
 
 export default function ShortFormPage() {
   const [data, setData] = useState<ShortFormData | null>(null);
@@ -126,8 +126,8 @@ export default function ShortFormPage() {
                   data={data.b2_bar}
                   xKey="label"
                   bars={[
-                    { key: "short", label: "Short-form", color: "#ff7759" },
-                    { key: "long", label: "Long-form", color: "#1863dc" },
+                    { key: "short", label: "Short-form", color: CHART_PALETTE[4] },
+                    { key: "long", label: "Long-form", color: CHART_PALETTE[5] },
                   ]}
                 />
               </ChartCard>

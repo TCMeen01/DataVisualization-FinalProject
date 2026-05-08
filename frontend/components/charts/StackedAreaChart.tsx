@@ -13,7 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { formatPercent } from "@/lib/constants";
+import { CHART_PALETTE, formatPercent } from "@/lib/constants";
 
 interface AreaConfig {
   key: string;
@@ -65,15 +65,15 @@ export function StackedAreaChart({ data, xKey, areas, pct }: StackedAreaChartPro
             <span style={{ fontSize: 12, color: "#75758a" }}>{value}</span>
           )}
         />
-        {areas.map((a) => (
+        {areas.map((a, index) => (
           <Area
             key={a.key}
             type="monotone"
             dataKey={a.key}
             name={a.label ?? a.key}
             stackId={a.stackId ?? "stack"}
-            stroke={a.color ?? "#1863dc"}
-            fill={a.color ?? "#1863dc"}
+            stroke={a.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
+            fill={a.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
             fillOpacity={0.6}
             strokeWidth={1.5}
           />

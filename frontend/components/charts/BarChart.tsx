@@ -13,7 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { formatNumber } from "@/lib/constants";
+import { CHART_PALETTE, formatNumber } from "@/lib/constants";
 
 interface BarConfig {
   key: string;
@@ -98,12 +98,12 @@ export function BarChart({
             <span style={{ fontSize: 12, color: "#75758a" }}>{value}</span>
           )}
         />
-        {bars.map((b) => (
+        {bars.map((b, index) => (
           <Bar
             key={b.key}
             dataKey={b.key}
             name={b.label ?? b.key}
-            fill={b.color ?? "#1863dc"}
+            fill={b.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
             radius={isHorizontal ? [0, 2, 2, 0] : [2, 2, 0, 0]}
           />
         ))}

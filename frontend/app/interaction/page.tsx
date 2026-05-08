@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES, CHART_PALETTE } from "@/lib/constants";
 
 export default function InteractionPage() {
   const [data, setData] = useState<InteractionData | null>(null);
@@ -117,10 +117,15 @@ export default function InteractionPage() {
                 description="Box plot với 3 subscriber tiers"
               >
                 <BoxPlotly
-                  traces={data.e1_box.map((item) => ({
+                  traces={data.e1_box.map((item, index) => ({
                     name: `${item.label} (${item.tier})`,
                     y: item.values,
-                    color: item.tier === "Mega" ? "#10b981" : item.tier === "Large" ? "#1863dc" : "#f59e0b",
+                    color:
+                      item.tier === "Mega"
+                        ? CHART_PALETTE[3]
+                        : item.tier === "Large"
+                        ? CHART_PALETTE[2]
+                        : CHART_PALETTE[6],
                   }))}
                   yLabel="Engagement rate"
                   height={340}
@@ -135,7 +140,7 @@ export default function InteractionPage() {
                   z={data.e2_heatmap.z}
                   x={data.e2_heatmap.hours.map(String)}
                   y={data.e2_heatmap.days}
-                  colorscale="Blues"
+                  colorscale="Greens"
                   xLabel="Giờ đăng (GMT+7)"
                   yLabel="Ngày trong tuần"
                   height={340}

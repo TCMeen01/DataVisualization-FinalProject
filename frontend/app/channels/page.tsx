@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, SUBSCRIBER_TIERS, CATEGORY_COLORS } from "@/lib/constants";
+import { CATEGORIES, SUBSCRIBER_TIERS, CATEGORY_COLORS, CHART_PALETTE } from "@/lib/constants";
 
 export default function ChannelsPage() {
   const [data, setData] = useState<ChannelsData | null>(null);
@@ -138,7 +138,7 @@ export default function ChannelsPage() {
                         text: [point.channel_name],
                         marker: {
                           size: [Math.sqrt(point.video_count) * 2],
-                          color: CATEGORY_COLORS[point.category] ?? "#1863dc",
+                          color: CATEGORY_COLORS[point.category] ?? CHART_PALETTE[0],
                           opacity: 0.7,
                         },
                       });

@@ -6,6 +6,7 @@
  */
 import dynamic from "next/dynamic";
 import type { PlotParams } from "react-plotly.js";
+import { CHART_PALETTE } from "@/lib/constants";
 
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false }) as React.ComponentType<PlotParams>;
 
@@ -25,14 +26,14 @@ interface BoxPlotlyProps {
 export function BoxPlotly({ traces, yLabel, height = 320 }: BoxPlotlyProps) {
   return (
     <Plot
-      data={traces.map((t) => ({
+      data={traces.map((t, index) => ({
         type: "box",
         name: t.name,
         y: t.y,
         boxmean: true,
-        marker: { color: t.color ?? "#1863dc", opacity: 0.8 },
-        line: { color: t.color ?? "#1863dc" },
-        fillcolor: t.color ? `${t.color}30` : "#1863dc30",
+        marker: { color: t.color ?? CHART_PALETTE[index % CHART_PALETTE.length], opacity: 0.8 },
+        line: { color: t.color ?? CHART_PALETTE[index % CHART_PALETTE.length] },
+        fillcolor: t.color ? `${t.color}30` : `${CHART_PALETTE[index % CHART_PALETTE.length]}30`,
       } as Plotly.Data))}
       layout={{
         paper_bgcolor: "#ffffff",

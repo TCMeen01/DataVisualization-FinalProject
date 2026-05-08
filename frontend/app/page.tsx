@@ -12,7 +12,7 @@ import { ChartCard } from "@/components/charts/ChartCard";
 import { PieDonut } from "@/components/charts/PieDonut";
 import { LineChart } from "@/components/charts/LineChart";
 import { StackedAreaChart } from "@/components/charts/StackedAreaChart";
-import { formatNumber } from "@/lib/constants";
+import { CHART_PALETTE, formatNumber } from "@/lib/constants";
 
 function OverviewContent() {
   const { selectedCategory, setSelectedCategory } = useCategoryFilter();
@@ -90,7 +90,7 @@ function OverviewContent() {
           <LineChart
             data={data.a2_views_by_year ?? []}
             xKey="year"
-            lines={[{ key: "total_views", label: "Lượt xem", color: "#1863dc" }]}
+            lines={[{ key: "total_views", label: "Lượt xem", color: CHART_PALETTE[3] }]}
             yFormatter={formatNumber}
           />
         </ChartCard>
@@ -105,8 +105,8 @@ function OverviewContent() {
             data={data.a3_short_long_ratio ?? []}
             xKey="year"
             areas={[
-              { key: "short_count", label: "Short-form", color: "#ff7759", stackId: "ratio" },
-              { key: "long_count", label: "Long-form", color: "#1863dc", stackId: "ratio" },
+              { key: "short_count", label: "Short-form", color: CHART_PALETTE[4], stackId: "ratio" },
+              { key: "long_count", label: "Long-form", color: CHART_PALETTE[5], stackId: "ratio" },
             ]}
             pct
           />

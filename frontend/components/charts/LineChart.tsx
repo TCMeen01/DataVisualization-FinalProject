@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { formatNumber } from "@/lib/constants";
+import { CHART_PALETTE, formatNumber } from "@/lib/constants";
 
 interface LineConfig {
   key: string;
@@ -77,21 +77,21 @@ export function LineChart({
         {referenceLine != null && (
           <ReferenceLine
             x={referenceLine}
-            stroke="#ff7759"
+            stroke={CHART_PALETTE[7]}
             strokeDasharray="4 4"
-            label={{ value: referenceLabel ?? "", fill: "#ff7759", fontSize: 11 }}
+            label={{ value: referenceLabel ?? "", fill: CHART_PALETTE[7], fontSize: 11 }}
           />
         )}
-        {lines.map((l) => (
+        {lines.map((l, index) => (
           <Line
             key={l.key}
             type="monotone"
             dataKey={l.key}
             name={l.label ?? l.key}
-            stroke={l.color ?? "#1863dc"}
+            stroke={l.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 4, fill: l.color ?? "#1863dc" }}
+            activeDot={{ r: 4, fill: l.color ?? CHART_PALETTE[index % CHART_PALETTE.length] }}
           />
         ))}
       </RechartsLineChart>

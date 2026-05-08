@@ -10,7 +10,7 @@ import { InsightCard } from "@/components/dashboard/InsightCard";
 import { ChartCard } from "@/components/charts/ChartCard";
 import { LineChart } from "@/components/charts/LineChart";
 import { BarChart } from "@/components/charts/BarChart";
-import { CATEGORIES, formatNumber } from "@/lib/constants";
+import { CATEGORIES, CHART_PALETTE, formatNumber } from "@/lib/constants";
 
 export default function EconomyPage() {
   const [data, setData] = useState<EconomyData | null>(null);
@@ -109,7 +109,7 @@ export default function EconomyPage() {
                 <LineChart
                   data={data.f1_line}
                   xKey="month"
-                  lines={[{ key: "count", label: "Video thương mại", color: "#10b981" }]}
+                  lines={[{ key: "count", label: "Video thương mại", color: CHART_PALETTE[3] }]}
                   referenceLine="2024-10"
                   referenceLabel="YouTube Shopping VN"
                   yFormatter={formatNumber}
@@ -124,8 +124,8 @@ export default function EconomyPage() {
                   data={data.f2_bar}
                   xKey="category"
                   bars={[
-                    { key: "commercial", label: "Commercial", color: "#10b981" },
-                    { key: "non_commercial", label: "Non-commercial", color: "#1863dc" },
+                    { key: "commercial", label: "Commercial", color: CHART_PALETTE[3] },
+                    { key: "non_commercial", label: "Non-commercial", color: CHART_PALETTE[2] },
                   ]}
                   yFormatter={formatNumber}
                 />

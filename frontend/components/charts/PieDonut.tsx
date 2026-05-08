@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { CATEGORY_COLORS } from "@/lib/constants";
+import { CATEGORY_COLORS, CHART_PALETTE } from "@/lib/constants";
 
 interface PieDonutProps {
   data: { name: string; value: number }[];
@@ -42,10 +42,10 @@ export function PieDonut({ data, onSliceClick, selectedSlice }: PieDonutProps) {
           strokeWidth={1}
           stroke="#f2f2f2"
         >
-          {data.map((entry) => (
+          {data.map((entry, index) => (
             <Cell
               key={entry.name}
-              fill={CATEGORY_COLORS[entry.name] ?? "#93939f"}
+              fill={CATEGORY_COLORS[entry.name] ?? CHART_PALETTE[index % CHART_PALETTE.length]}
               opacity={
                 !selectedSlice || selectedSlice === entry.name ? 1 : 0.35
               }

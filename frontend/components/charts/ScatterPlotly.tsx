@@ -6,6 +6,7 @@
  */
 import dynamic from "next/dynamic";
 import type { PlotParams } from "react-plotly.js";
+import { CHART_PALETTE } from "@/lib/constants";
 
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false }) as React.ComponentType<PlotParams>;
 
@@ -34,7 +35,7 @@ export function ScatterPlotly({
 }: ScatterPlotlyProps) {
   return (
     <Plot
-      data={traces.map((t) => ({
+      data={traces.map((t, index) => ({
         type: "scatter",
         mode: "markers",
         name: t.name,
@@ -47,7 +48,7 @@ export function ScatterPlotly({
         marker: {
           size: 8,
           opacity: 0.75,
-          color: "#1863dc",
+          color: t.marker?.color ?? CHART_PALETTE[index % CHART_PALETTE.length],
           line: { width: 0.5, color: "#ffffff" },
           ...t.marker,
         },

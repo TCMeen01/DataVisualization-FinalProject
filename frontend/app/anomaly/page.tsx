@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { CHART_PALETTE } from "@/lib/constants";
 
 export default function AnomalyPage() {
   const [data, setData] = useState<AnomalyData | null>(null);
@@ -126,14 +127,14 @@ export default function AnomalyPage() {
                       x: data.d1_scatter.filter((p) => !p.suspect_fake_view).map((p) => p.view_count),
                       y: data.d1_scatter.filter((p) => !p.suspect_fake_view).map((p) => p.like_view_ratio),
                       text: data.d1_scatter.filter((p) => !p.suspect_fake_view).map((p) => p.title),
-                      marker: { color: "#1863dc", opacity: 0.6 },
+                      marker: { color: CHART_PALETTE[2], opacity: 0.6 },
                     },
                     {
                       name: "Nghi ngờ",
                       x: data.d1_scatter.filter((p) => p.suspect_fake_view).map((p) => p.view_count),
                       y: data.d1_scatter.filter((p) => p.suspect_fake_view).map((p) => p.like_view_ratio),
                       text: data.d1_scatter.filter((p) => p.suspect_fake_view).map((p) => p.title),
-                      marker: { color: "#ff7759", opacity: 0.75 },
+                      marker: { color: CHART_PALETTE[7], opacity: 0.75 },
                     },
                   ]}
                   xAxisType="log"
