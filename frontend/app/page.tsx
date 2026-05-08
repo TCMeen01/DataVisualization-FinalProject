@@ -112,7 +112,7 @@ function OverviewContent() {
             }))}
             xKey="year"
             areas={[
-              { key: "short", label: "Short-form", color: CHART_PALETTE[4], stackId: "ratio" },
+              { key: "short", label: "Short-form", color: CHART_PALETTE[7], stackId: "ratio" },
               { key: "long", label: "Long-form", color: CHART_PALETTE[5], stackId: "ratio" },
             ]}
             pct
