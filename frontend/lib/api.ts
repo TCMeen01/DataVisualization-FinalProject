@@ -193,9 +193,10 @@ export const api = {
     return request<OverviewData>(`/api/data/overview${qs}`);
   },
 
-  shortForm: (params: { year_from?: number; category?: string } = {}) => {
+  shortForm: (params: { year_from?: number; year_to?: number; category?: string } = {}) => {
     const qs = new URLSearchParams();
     if (params.year_from != null) qs.set("year_from", String(params.year_from));
+    if (params.year_to != null)   qs.set("year_to", String(params.year_to));
     if (params.category)          qs.set("category", params.category);
     const str = qs.toString();
     return request<ShortFormData>(`/api/data/short-form${str ? `?${str}` : ""}`);

@@ -16,6 +16,7 @@ interface ScatterTrace {
   y: number[];
   text?: string[];
   marker?: Partial<Plotly.PlotMarker>;
+  markerSize?: number;
 }
 
 interface ScatterPlotlyProps {
@@ -24,6 +25,7 @@ interface ScatterPlotlyProps {
   xLabel?: string;
   yLabel?: string;
   height?: number;
+  markerSize?: number;
 }
 
 export function ScatterPlotly({
@@ -32,6 +34,7 @@ export function ScatterPlotly({
   xLabel,
   yLabel,
   height = 320,
+  markerSize = 5,
 }: ScatterPlotlyProps) {
   return (
     <Plot
@@ -46,7 +49,7 @@ export function ScatterPlotly({
           ? "<b>%{text}</b><br>x: %{x}<br>y: %{y}<extra></extra>"
           : "x: %{x}<br>y: %{y}<extra></extra>",
         marker: {
-          size: 8,
+          size: t.markerSize ?? markerSize,
           opacity: 0.75,
           color: t.marker?.color ?? CHART_PALETTE[index % CHART_PALETTE.length],
           line: { width: 0.5, color: "#ffffff" },

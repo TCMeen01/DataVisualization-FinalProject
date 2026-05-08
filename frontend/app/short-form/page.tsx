@@ -33,6 +33,7 @@ export default function ShortFormPage() {
       api
         .shortForm({
           year_from: yearRange[0],
+          year_to: yearRange[1],
           category: category === "All" || category === null ? undefined : category,
         })
         .then(setData)

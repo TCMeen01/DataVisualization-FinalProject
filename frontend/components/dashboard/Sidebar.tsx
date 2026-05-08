@@ -44,13 +44,13 @@ export function Sidebar() {
           className="text-[10px] uppercase tracking-[0.2em] font-medium"
           style={{ color: "#93939f", fontFamily: "var(--font-mono, monospace)", letterSpacing: "0.28px" }}
         >
-          VN • YouTube
+          Viet Nam • YouTube
         </p>
         <h2
           className="mt-1 text-lg font-semibold text-white leading-tight"
           style={{ fontFamily: "var(--font-display, 'Space Grotesk', Inter, sans-serif)" }}
         >
-          Analytics + AI
+          Analytics
         </h2>
       </div>
 

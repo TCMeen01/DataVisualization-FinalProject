@@ -54,7 +54,10 @@ function OverviewContent() {
         <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#212121]">
           Tổng Quan
         </h1>
-        <p className="mt-3 max-w-2xl text-[#75758a]">
+        <p className="mt-3 max-w-3xl text-[#75758a] italic font-semibold">
+          Dữ liệu được thu thập vào ngày 05/05/2026.
+        </p>
+        <p className="mt-3 max-w-3xl text-[#75758a]">
           Chỉ số tổng quan và phân bố theo danh mục. Click vào biểu đồ tròn để lọc theo danh mục.
         </p>
       </header>
@@ -102,11 +105,15 @@ function OverviewContent() {
           description={selectedCategory ? `Lọc: ${selectedCategory}` : "Tất cả danh mục"}
         >
           <StackedAreaChart
-            data={data.a3_short_long_ratio ?? []}
+            data={(data.a3_short_long_ratio ?? []).map((d) => ({
+              year: d.year,
+              short: d.short_ratio,
+              long: 1 - d.short_ratio,
+            }))}
             xKey="year"
             areas={[
-              { key: "short_count", label: "Short-form", color: CHART_PALETTE[4], stackId: "ratio" },
-              { key: "long_count", label: "Long-form", color: CHART_PALETTE[5], stackId: "ratio" },
+              { key: "short", label: "Short-form", color: CHART_PALETTE[4], stackId: "ratio" },
+              { key: "long", label: "Long-form", color: CHART_PALETTE[5], stackId: "ratio" },
             ]}
             pct
           />

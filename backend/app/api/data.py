@@ -26,9 +26,9 @@ async def get_overview(category: str | None = None) -> dict:
 
 @router.get("/short-form")
 async def get_short_form(
-    year_from: int | None = None, category: str | None = None
+    year_from: int | None = None, year_to: int | None = None, category: str | None = None
 ) -> dict:
-    return data_store.get_short_form(year_from, category)
+    return data_store.get_short_form(year_from, year_to, category)
 
 
 @router.get("/channels")

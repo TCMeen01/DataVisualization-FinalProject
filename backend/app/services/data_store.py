@@ -112,13 +112,8 @@ def _records(df: pd.DataFrame) -> list[dict[str, Any]]:
 
 def get_overview(category: str | None = None) -> dict[str, Any]:
     v, c = _require_loaded()
-    total_videos = int(len(v))
-    total_channels = int(len(c))
-    total_views = int(v["view_count"].sum()) if "view_count" in v.columns else 0
-    short_ratio = (
-        float(v["is_short_form"].mean()) if "is_short_form" in v.columns else 0.0
-    )
-
+    
+    # A1: Always show all categories
     a1_src = (
         v.groupby("channel_category", dropna=True)
         .size()
@@ -127,7 +122,16 @@ def get_overview(category: str | None = None) -> dict[str, Any]:
     )
     a1 = _records(a1_src)
 
+    # Filter data for other charts and KPIs
     filtered = v if not category else v[v["channel_category"] == category]
+    
+    # Calculate KPIs from filtered data
+    total_videos = int(len(filtered))
+    total_channels = int(filtered["channel_name"].nunique()) if "channel_name" in filtered.columns else 0
+    total_views = int(filtered["view_count"].sum()) if "view_count" in filtered.columns else 0
+    short_ratio = (
+        float(filtered["is_short_form"].mean()) if "is_short_form" in filtered.columns else 0.0
+    )
 
     a2_src = (
         filtered.groupby("year", dropna=True)["view_count"]
@@ -169,28 +173,42 @@ def get_overview(category: str | None = None) -> dict[str, Any]:
 
 
 def get_short_form(
-    year_from: int | None = None, category: str | None = None
+    year_from: int | None = None, year_to: int | None = None, category: str | None = None
 ) -> dict[str, Any]:
     v, _ = _require_loaded()
 
-    # B1: Heatmap of short_form_ratio by channel × year
-    # Calculate ratio for each channel-year combination
-    ratio_df = (
-        v.groupby(["channel_name", "year"], dropna=True)
-        .agg(
-            short_count=("is_short_form", lambda x: (x == True).sum()),  # noqa: E712
-            total_count=("is_short_form", "count")
+    # B1: Heatmap - group by category (if no category selected) or by channel (if category selected)
+    if category:
+        # Show channels within the selected category
+        v_filtered = v[v["channel_category"] == category]
+        ratio_df = (
+            v_filtered.groupby(["channel_name", "year"], dropna=True)
+            .agg(
+                short_count=("is_short_form", lambda x: (x == True).sum()),  # noqa: E712
+                total_count=("is_short_form", "count")
+            )
+            .reset_index()
         )
-        .reset_index()
-    )
-    ratio_df["short_form_ratio"] = ratio_df["short_count"] / ratio_df["total_count"]
+        ratio_df["short_form_ratio"] = ratio_df["short_count"] / ratio_df["total_count"]
+        group_by_field = "channel_name"
+    else:
+        # Show categories
+        ratio_df = (
+            v.groupby(["channel_category", "year"], dropna=True)
+            .agg(
+                short_count=("is_short_form", lambda x: (x == True).sum()),  # noqa: E712
+                total_count=("is_short_form", "count")
+            )
+            .reset_index()
+        )
+        ratio_df["short_form_ratio"] = ratio_df["short_count"] / ratio_df["total_count"]
+        ratio_df["channel_name"] = ratio_df["channel_category"]
+        group_by_field = "channel_category"
 
     if year_from is not None:
         ratio_df = ratio_df[ratio_df["year"] >= year_from]
-    if category:
-        # Filter by category - need to join with videos to get category
-        v_filtered = v[v["channel_category"] == category]
-        ratio_df = ratio_df[ratio_df["channel_name"].isin(v_filtered["channel_name"].unique())]
+    if year_to is not None:
+        ratio_df = ratio_df[ratio_df["year"] <= year_to]
 
     # Pivot to create heatmap matrix
     pivot = ratio_df.pivot_table(
@@ -214,6 +232,8 @@ def get_short_form(
 
     if year_from is not None:
         year_counts = year_counts[year_counts["year"] >= year_from]
+    if year_to is not None:
+        year_counts = year_counts[year_counts["year"] <= year_to]
     if category:
         v_cat = v[v["channel_category"] == category]
         year_counts = v_cat.groupby("year", dropna=True).agg(
@@ -222,6 +242,8 @@ def get_short_form(
         ).reset_index()
         if year_from is not None:
             year_counts = year_counts[year_counts["year"] >= year_from]
+        if year_to is not None:
+            year_counts = year_counts[year_counts["year"] <= year_to]
 
     b2_bar = [
         {

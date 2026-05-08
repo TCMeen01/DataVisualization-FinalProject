@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, SUBSCRIBER_TIERS, CATEGORY_COLORS, CHART_PALETTE } from "@/lib/constants";
+import { CATEGORIES, CATEGORY_COLORS, CHART_PALETTE } from "@/lib/constants";
 
 export default function ChannelsPage() {
   const [data, setData] = useState<ChannelsData | null>(null);
@@ -68,18 +68,17 @@ export default function ChannelsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm text-[#75758a]">Tier:</label>
+          <label className="text-sm text-[#75758a]">Subscriber tier:</label>
           <Select value={tier} onValueChange={setTier}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-56">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">Tất cả</SelectItem>
-              {SUBSCRIBER_TIERS.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
-                </SelectItem>
-              ))}
+              <SelectItem value="Micro">Micro (&lt;100K)</SelectItem>
+              <SelectItem value="Mid">Mid (100K–1M)</SelectItem>
+              <SelectItem value="Large">Large (1M–10M)</SelectItem>
+              <SelectItem value="Mega">Mega (&gt;10M)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -119,8 +118,8 @@ export default function ChannelsPage() {
               </ChartCard>
 
               <ChartCard
-                title="C2: Subscriber vs Avg Views"
-                description="Scatter plot, size = video count"
+                title="C2: Lượt đăng ký vs Lượt xem trung bình"
+                description="Scatter plot"
               >
                 <ScatterPlotly
                   traces={data.c2_scatter.reduce((acc, point) => {
@@ -129,7 +128,6 @@ export default function ChannelsPage() {
                       existing.x.push(point.subscriber_count);
                       existing.y.push(point.avg_views);
                       existing.text?.push(point.channel_name);
-                      existing.marker?.size?.push(Math.sqrt(point.video_count) * 2);
                     } else {
                       acc.push({
                         name: point.category,
@@ -137,14 +135,14 @@ export default function ChannelsPage() {
                         y: [point.avg_views],
                         text: [point.channel_name],
                         marker: {
-                          size: [Math.sqrt(point.video_count) * 2],
+                          size: 10,
                           color: CATEGORY_COLORS[point.category] ?? CHART_PALETTE[0],
                           opacity: 0.7,
                         },
                       });
                     }
                     return acc;
-                  }, [] as { name: string; x: number[]; y: number[]; text: string[]; marker: { size: number[]; color: string; opacity: number } }[])}
+                  }, [] as { name: string; x: number[]; y: number[]; text: string[]; marker: { size: number; color: string; opacity: number } }[])}
                   xAxisType="log"
                   xLabel="Subscriber count (log scale)"
                   yLabel="Avg views per video"
