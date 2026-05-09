@@ -69,15 +69,15 @@ async def get_hourly_patterns(date_from: str | None = None, date_to: str | None 
 
 
 @router.get("/weather")
-async def get_weather_impact() -> dict:
+async def get_weather_impact(season: str | None = None) -> dict:
     """
-    GET /api/data/weather
-    RO4: Weather impact (D1, D2, D3)
+    GET /api/data/weather?season=Winter
+    RO3: Weather impact (D1, D2, D3)
     - D1: Weather correlation coefficients (bar)
-    - D2: Seasonal weather scatter
-    - D3: PM2.5 + temperature dual-axis
+    - D2: Scatter PM2.5 vs Wind Speed theo mùa
+    - D3: Dual-axis PM2.5 + Wind Speed theo ngày
     """
-    return data_store.get_weather_impact()
+    return data_store.get_weather_impact(season)
 
 
 @router.get("/trend")

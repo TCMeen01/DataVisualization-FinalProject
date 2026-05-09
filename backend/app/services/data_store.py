@@ -298,31 +298,63 @@ def get_hourly_patterns(
 # D: Weather Impact (D1, D2, D3)
 # ──────────────────────────────────────────────────────────────────────────────
 
-def get_weather_impact() -> dict[str, Any]:
+def get_weather_impact(season: str | None = None) -> dict[str, Any]:
     """
-    Weather impact analysis (D1–D3):
+    Weather impact analysis (D1–D3) — RO3:
     - D1: Correlation bar chart (tất cả biến thời tiết vs pm25)
-    - D2: Scatter PM2.5 vs Wind Speed theo mùa
-    - D3: Monthly dual-axis PM2.5 + Wind Speed
+    - D2: Scatter PM2.5 vs Tốc độ gió theo mùa
+    - D3: Dual-axis PM2.5 + Tốc độ gió theo ngày
     """
     df = _require_loaded()
 
+    # Apply season filter if provided
+    if season:
+        seasons = [s.strip() for s in season.split(",")]
+        df = df[df["Season"].isin(seasons)]
+
     # D1: Pearson correlation — tất cả biến thời tiết với pm25
     weather_vars = ["temperature", "humidity", "pressure_msl", "wind_speed", "precipitation"]
+    # Vietnamese labels for frontend display
+    var_labels = {
+        "temperature":   "Nhiệt độ (°C)",
+        "humidity":      "Độ ẩm (%)",
+        "pressure_msl":  "Áp suất (hPa)",
+        "wind_speed":    "Tốc độ gió (m/s)",
+        "precipitation": "Lượng mưa (mm)",
+    }
     d1_corr = []
     for col in weather_vars:
         if col in df.columns:
             corr = df["pm25"].corr(df[col])
+            r_val = float(corr) if not pd.isna(corr) else 0.0
+            # Annotation text for notable correlations
+            annotation = ""
+            if col == "humidity":
+                annotation = "r ≈ 0 — Độ ẩm gần như KHÔNG ảnh hưởng!"
+            elif col == "wind_speed":
+                annotation = "r < 0 — Gió mạnh giảm ô nhiễm đáng kể"
+            elif col == "pressure_msl":
+                annotation = "Áp suất cao → không khí tĩnh → ô nhiễm tích tụ"
+
             d1_corr.append({
                 "variable":    col,
-                "correlation": float(corr) if not pd.isna(corr) else 0.0,
+                "label":       var_labels.get(col, col),
+                "correlation": r_val,
+                "annotation":  annotation,
             })
     # Sắp xếp theo |r| giảm dần
     d1_corr.sort(key=lambda x: abs(x["correlation"]), reverse=True)
 
-    # D2: Scatter PM2.5 vs Wind Speed theo mùa
+    # Wind speed correlation value (for insight)
+    wind_corr = float(df["pm25"].corr(df["wind_speed"])) if "wind_speed" in df.columns else 0.0
+    humidity_corr = float(df["pm25"].corr(df["humidity"])) if "humidity" in df.columns else 0.0
+
+    # D2: Scatter PM2.5 vs Wind Speed theo mùa (sampled for performance)
     d2_cols = ["Season", "wind_speed", "pm25"]
     d2_data = df[d2_cols].dropna()
+    # Sample to max 2000 points for frontend performance
+    if len(d2_data) > 2000:
+        d2_data = d2_data.sample(n=2000, random_state=42)
     d2_scatter = [
         {
             "season":     row["Season"],
@@ -332,26 +364,38 @@ def get_weather_impact() -> dict[str, Any]:
         for _, row in d2_data.iterrows()
     ]
 
-    # D3: Monthly dual-axis PM2.5 + Wind Speed
-    d3_monthly = (
-        df.groupby(df["datetime"].dt.to_period("M"))
+    # Per-season correlation for D2 annotation
+    season_corr = {}
+    for s, sub in df.groupby("Season"):
+        if "wind_speed" in sub.columns and len(sub) > 10:
+            r = sub["pm25"].corr(sub["wind_speed"])
+            season_corr[s] = float(r) if not pd.isna(r) else 0.0
+
+    # D3: Daily dual-axis PM2.5 + Wind Speed (REQUIREMENTS: "X: ngày (daily average)")
+    d3_daily = (
+        df.groupby("Date")
         .agg({"pm25": "mean", "wind_speed": "mean"})
         .reset_index()
     )
-    d3_monthly["datetime"] = d3_monthly["datetime"].astype(str)
+    d3_daily = d3_daily.sort_values("Date")
     d3_dual = [
         {
-            "month":      row["datetime"],
+            "date":       str(row["Date"]),
             "pm25":       float(row["pm25"]),
             "wind_speed": float(row["wind_speed"]),
         }
-        for _, row in d3_monthly.iterrows()
+        for _, row in d3_daily.iterrows()
     ]
 
     return {
         "d1_correlation":    d1_corr,
         "d2_wind_scatter":   d2_scatter,
+        "d2_season_corr":    season_corr,
         "d3_dual_axis":      d3_dual,
+        "insight": {
+            "wind_corr":     wind_corr,
+            "humidity_corr": humidity_corr,
+        },
     }
 
 
