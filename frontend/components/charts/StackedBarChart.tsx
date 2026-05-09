@@ -1,78 +1,52 @@
 "use client";
 /**
- * StackedBarChart — Recharts stacked bar chart.
- * Used for: Chart B2 (short vs long videos by year/quarter).
+ * Chart C3 — Stacked Bar % AQI theo khung giờ (Recharts)
  */
 import {
-  BarChart,
+  BarChart as RechartsBarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
+  Cell,
   ResponsiveContainer,
 } from "recharts";
-import { CHART_PALETTE, formatNumber } from "@/lib/constants";
+import { AQI_COLORS } from "@/lib/constants";
 
-interface BarConfig {
-  key: string;
-  color?: string;
-  label?: string;
+export interface StackedBarData {
+  timeBlock: string;
+  Good: number;
+  Moderate: number;
+  "Unhealthy (Sensitive)": number;
+  Unhealthy: number;
+  "Very Unhealthy": number;
+  Hazardous: number;
 }
 
-interface StackedBarChartProps {
-  data: Record<string, unknown>[];
-  xKey: string;
-  bars: BarConfig[];
+export interface StackedBarChartProps {
+  data: StackedBarData[];
 }
 
-export function StackedBarChart({ data, xKey, bars }: StackedBarChartProps) {
+export function StackedBarChart({ data }: StackedBarChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
-        <CartesianGrid stroke="#f2f2f2" strokeDasharray="3 3" vertical={false} />
-        <XAxis
-          dataKey={xKey}
-          tick={{ fontSize: 12, fill: "#93939f" }}
-          axisLine={false}
-          tickLine={false}
+    <ResponsiveContainer width="100%" height={300}>
+      <RechartsBarChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="timeBlock" />
+        <YAxis label={{ value: "% giờ", angle: -90, position: "insideLeft" }} />
+        <Tooltip 
+          formatter={(value) => `${(value as number).toFixed(1)}%`}
         />
-        <YAxis
-          tickFormatter={formatNumber}
-          tick={{ fontSize: 12, fill: "#93939f" }}
-          axisLine={false}
-          tickLine={false}
-          width={48}
-        />
-        <Tooltip
-          contentStyle={{
-            background: "#ffffff",
-            border: "1px solid #d9d9dd",
-            borderRadius: 8,
-            fontSize: 13,
-            color: "#212121",
-          }}
-          formatter={(v) => formatNumber(v as number)}
-        />
-        <Legend
-          iconType="circle"
-          iconSize={8}
-          formatter={(value) => (
-            <span style={{ fontSize: 12, color: "#75758a" }}>{value}</span>
-          )}
-        />
-        {bars.map((b, index) => (
-          <Bar
-            key={b.key}
-            dataKey={b.key}
-            name={b.label ?? b.key}
-            stackId="stack"
-            fill={b.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
-            radius={[2, 2, 0, 0]}
-          />
-        ))}
-      </BarChart>
+        <Legend />
+        <Bar dataKey="Good" stackId="aqi" fill={AQI_COLORS.Good} />
+        <Bar dataKey="Moderate" stackId="aqi" fill={AQI_COLORS.Moderate} />
+        <Bar dataKey="Unhealthy (Sensitive)" stackId="aqi" fill={AQI_COLORS.Unhealthy_Sensitive} />
+        <Bar dataKey="Unhealthy" stackId="aqi" fill={AQI_COLORS.Unhealthy} />
+        <Bar dataKey="Very Unhealthy" stackId="aqi" fill={AQI_COLORS.Very_Unhealthy} />
+        <Bar dataKey="Hazardous" stackId="aqi" fill={AQI_COLORS.Hazardous} />
+      </RechartsBarChart>
     </ResponsiveContainer>
   );
 }

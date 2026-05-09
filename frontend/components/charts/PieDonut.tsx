@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { CATEGORY_COLORS, CHART_PALETTE } from "@/lib/constants";
+import { NEUTRAL_COLORS, AQI_COLORS } from "@/lib/constants";
 
 interface PieDonutProps {
   data: { name: string; value: number; category?: string }[];
@@ -49,7 +49,7 @@ export function PieDonut({ data, onSliceClick, selectedSlice }: PieDonutProps) {
             return (
               <Cell
                 key={entry.name}
-                fill={CATEGORY_COLORS[entry.category ?? entry.name] ?? CHART_PALETTE[index % CHART_PALETTE.length]}
+                fill={AQI_COLORS[entry.name as keyof typeof AQI_COLORS] ?? AQI_COLORS.Moderate}
                 opacity={!hasSelection || isSelected ? 1 : 0.4}
                 className="transition-opacity duration-300 hover:opacity-70"
               />

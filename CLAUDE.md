@@ -6,26 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The repo has multiple spec files that disagree with each other. Read them in this priority order:
 
-1. **`REQUIREMENTS.md`** — current, authoritative spec. Defines the project as a **Vietnam YouTube Analytics Dashboard + AI Module** built on `videos_processed.csv` (30,778 rows) and `channels_processed.csv` (56 rows) from a Kaggle dataset. This supersedes earlier docs.
-2. **`INIT.md`** — original scaffold spec. Useful for the initial structure rationale, but its "generic VN data" framing has been replaced by the YouTube focus in `REQUIREMENTS.md`. Where they conflict, `REQUIREMENTS.md` wins.
-3. **`README.md`** — quick run instructions; trust over `INIT.md` for setup commands.
-4. `docs/architecture.md`, `docs/api-spec.md`, `docs/design-system.md` for deeper detail.
+1. **`REQUIREMENTS.md`** — current, authoritative spec. Defines the project as a **Hanoi Air Quality (PM2.5) Analytics Dashboard + AI Module** built on `hanoi_aqi_ml_ready_fixed.csv` (~14,451 rows of hourly PM2.5 + weather data from 2024–2026). This is the single source of truth.
+2. **`README.md`** — quick run instructions and feature overview.
+3. `docs/architecture.md`, `docs/api-spec.md`, `docs/design-system.md` for architectural and API details.
+4. `PLAN.md` — implementation roadmap and phasing.
 
-When `INIT.md` says one thing (e.g. `uv` for Python, Next.js 15) and the actual repo says another (conda + `pip install -r requirements.txt`, Next.js 16), **the repo is correct** — `INIT.md` was a plan that drifted.
+When in doubt, **`REQUIREMENTS.md`** wins. It contains the complete specification including:
+- 5 Research Objectives (RO1–RO5) mapping 1-1 to 5 dashboard pages
+- 15 charts MVP (Overview 3 + 5 RO × 3)
+- AI Module spec with Human-in-the-loop (pending → approved → executed → logged)
+- SQLite schema, API endpoints, system prompt for LLM
+- Design system with AQI colors + Season colors
+- Tech stack: FastAPI (backend), Next.js 16 (frontend), Gemini 2.0 Flash (LLM), SQLite (logs)
 
 ## Core principles (non-negotiable)
 
-These are encoded in `REQUIREMENTS.md` §2 and must be respected by any code change:
+These are encoded in `REQUIREMENTS.md` §4–§5 and must be respected by any code change:
 
-- **Human-in-the-loop.** AI suggests code; it never executes on its own. Code passes through `pending → (edited) → approved → executed → completed/failed`. The Approve button is the only path to execution.
-- **No silent execution.** AI-generated code must be visible in the UI before running, with Vietnamese-language step comments.
-- **Local execution only.** Code runs via `subprocess` in `backend/sandbox/`, not in any cloud sandbox. Honor the `timeout` and the no-network/no-`os.system`/no-`subprocess` rules in the LLM system prompt.
-- **Full audit trail.** Every request, code, edit, and result is logged to SQLite (`backend/logs.db`).
-- **No hallucinated data.** The LLM may only reference columns present in the schema injected into its system prompt.
+- **Human-in-the-loop (HITL).** AI suggests code + explanation; it never executes on its own. Code lifecycle: `pending → approved/rejected → executing → completed/failed`. The Approve button is the **only** path to execution. Users can edit code before approving.
+- **No silent execution.** AI-generated code must be visible in the UI (Monaco Editor) before running, with **Vietnamese-language comments** explaining each step. User sees exactly what will run.
+- **Local execution only.** Code runs via `subprocess` in `backend/sandbox/`, not in any cloud sandbox. Enforce the no-network/no-`os.system`/no-`subprocess` rules in the LLM system prompt (REQUIREMENTS.md §4.3). Timeout: 30 seconds.
+- **Full audit trail.** Every request (user prompt), AI response (code + explanation), edit, approval, and execution result is logged to SQLite (`backend/logs.db`). See schema in REQUIREMENTS.md §4.6.
+- **No hallucinated data.** The LLM may **ONLY** reference columns/statistics present in the schema injected into its system prompt (REQUIREMENTS.md §4.3). Cannot reference PM2.5 columns that don't exist, must NOT make up data.
 
 ## Common commands
 
-Two terminals are required for dev. Backend uses conda (env name: `vn-dataviz-ai`).
+Two terminals are required for dev. Backend uses conda (env name: `vn-dataviz-ai`). Frontend uses `pnpm`.
 
 **Backend (port 8000):**
 ```powershell
@@ -34,33 +40,42 @@ cd backend
 pip install -r requirements.txt   # first time only
 uvicorn app.main:app --reload
 ```
-Health check: `GET http://localhost:8000/health` → `{"ok": true}`. SQLite (`logs.db`) is auto-created on startup via the FastAPI `lifespan` hook in `backend/app/main.py`.
+Health check: `GET http://localhost:8000/health` → `{"ok": true}`. 
+SQLite (`logs.db`) is auto-created on startup via the FastAPI `lifespan` hook in `backend/app/main.py` (see REQUIREMENTS.md §4.4).
 
 **Frontend (port 3000):**
 ```powershell
 cd frontend
 pnpm install   # first time only
-pnpm dev
+pnpm dev       # dev server
 pnpm lint      # eslint
 pnpm build     # production build
 ```
 
-**Env:** copy `.env.example` to `.env` at repo root and fill `GEMINI_API_KEY`. `backend/app/config.py` reads from both `./.env` and `../.env`, so the file works from either the repo root or `backend/`.
+**Env setup:**
+1. Copy `.env.example` to `.env` at repo root
+2. Fill `GEMINI_API_KEY=your_gemini_key_here`
+3. Ensure `hanoi_aqi_ml_ready_fixed.csv` is in `backend/data/`
+4. `backend/app/config.py` reads from both `./.env` and `../.env`, so the file works from either the repo root or `backend/` folder
+
+**Data:**
+Download `hanoi_aqi_ml_ready_fixed.csv` from Kaggle ([Hanoi Air Quality 2024-2026](https://www.kaggle.com/datasets/diabolicfox/hanoi-air-quality-pm2-5-weather-data-2024-2026)) and place it in `backend/data/`. The file is ~14,451 rows, contains hourly PM2.5 + weather data (temp, humidity, wind, pressure, precip).
 
 ## Architecture
 
-Two independent processes talk over HTTP:
+Two independent processes communicate over HTTP/JSON:
 
 ```
-Next.js 16 (3000)  ── fetch ──▶  FastAPI (8000)
-  app/, components/                api/{ai,execute,logs,data}
-  lib/api.ts                       services/{llm/, executor, logger}
-                                   ├─ SQLite logs.db
-                                   ├─ subprocess in sandbox/
-                                   └─ data/*.csv
+Next.js 16 (3000)  ── POST/GET ──▶  FastAPI (8000)
+  app/                              api/{ai,execute,logs,data}
+  components/                       services/{llm/, executor, logger}
+  lib/api.ts                        data_store (in-memory cache)
+                                    ├─ SQLite logs.db
+                                    ├─ subprocess in sandbox/
+                                    └─ hanoi_air_quality.csv (cached on startup)
 ```
 
-### Backend (`backend/app/`)
+### Backend (`backend/app/`) — Air Quality Data Analysis
 
 - `main.py` — FastAPI app. `lifespan` creates the sandbox dir + initializes SQLite from `db/schema.sql`. CORS is locked to `settings.FRONTEND_URL`.
 - `api/` — four routers, all currently returning **mock data** per `INIT.md` §10. They are wired but not yet backed by real logic:

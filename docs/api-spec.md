@@ -8,7 +8,11 @@ Base URL: `http://localhost:8000`
 { "ok": true }
 ```
 
-## `POST /api/ai/generate`
+---
+
+### `POST /api/ai/generate`
+
+Sinh code Python từ user prompt qua LLM.
 
 **Request:**
 ```json

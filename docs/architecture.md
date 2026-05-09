@@ -1,11 +1,23 @@
-# Architecture
+# Architecture — Hanoi Air Quality (PM2.5) Analytics Dashboard
 
 ## Tổng quan
 
 Hai service chạy local, giao tiếp qua HTTP/JSON:
 
-- **Frontend** — Next.js 16 (App Router), Tailwind 4, shadcn/ui. Render dashboard, AI workspace, logs.
-- **Backend** — FastAPI + Python 3.11. Sinh code (qua LLM), chạy code trong sandbox, lưu log SQLite.
+- **Frontend** — Next.js 16 (App Router), Tailwind 4, shadcn/ui. Render 6 dashboard pages (Overview + 5 RO), AI workspace, logs.
+- **Backend** — FastAPI + Python 3.11. Sinh code Python (qua Google Gemini LLM), chạy code trong subprocess sandbox, lưu log SQLite.
+
+## Project Scope — 5 Research Objectives (RO)
+
+Mỗi trang dashboard map 1-1 với 1 RO:
+
+| RO | Page | Insights | Charts |
+|---|---|---|---|
+| RO1 | `/seasonal` | Mùa đông ô nhiễm gấp 4 lần; độ ẩm r≈0 | Box plot + Scatter (temp/humidity vs PM2.5) |
+| RO2 | `/hourly` | 7–9h & 19–21h tệ nhất; 14–18h an toàn | Polar bar (24h) + Heatmap (dow × hour) |
+| RO3 | `/weather` | Chỉ gió có tác dụng; mưa r≈0 | Corr bar (all weather vars) + Scatter (wind vs PM2.5) |
+| RO4 | `/trend` | Year-over-year loại bỏ mùa vụ | YoY line (cùng tháng) + Calendar heatmap |
+| RO5 | `/weekend` | Weekday/weekend chênh <10% | Box plot (dow) + Hourly profile (weekday vs weekend) |
 
 ## Flow chính (Human-in-the-loop)
 

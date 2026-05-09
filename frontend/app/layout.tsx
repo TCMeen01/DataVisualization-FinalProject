@@ -24,8 +24,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VN YouTube Analytics Dashboard",
-  description: "Vietnam YouTube data visualization dashboard with AI analysis module",
+  title: "Hanoi Air Quality (PM2.5) Analytics Dashboard",
+  description: "Dashboard trực quan hóa chất lượng không khí Hà Nội với AI module hỗ trợ phân tích",
 };
 
 export default function RootLayout({
