@@ -76,6 +76,8 @@ Yêu cầu:
 - Trả về CHÍNH XÁC insight text, không thêm prefix hay format
 
 Insight:"""
+        print(f"DEBUG - summary_text={summary_text}\n")
+        print(f"DEBUG - filter_text={filter_text}")
 
         return prompt
 
